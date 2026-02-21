@@ -1,8 +1,23 @@
 <!-- The Reliquary — Main Panel -->
 <div id="reliquary-panel" class="reliquary-panel reliquary-theme-veridian" style="display: none;">
 
-    <!-- Header: Crystal + Entity Info -->
-    <div class="reliquary-header">
+    <!-- Ambient background glow -->
+    <div class="rel-ambient"></div>
+
+    <!-- HEADER -->
+    <div class="rel-header">
+        <div class="rel-title">THE RELIQUARY</div>
+        <div class="rel-subtitle" id="reliquary-subtitle">something old lives here now</div>
+        <div class="rel-creed">THE HOUSE MUST ENDURE</div>
+        <div class="rel-divider"><span>✦</span><span>◆</span><span>✦</span></div>
+    </div>
+
+    <!-- ENTITY CARD — bordered box with diamond corners -->
+    <div class="rel-entity-card">
+        <span class="rel-corner rel-corner-tl">◆</span>
+        <span class="rel-corner rel-corner-br">◆</span>
+
+        <!-- Crystal (always visible, centered) -->
         <div class="reliquary-crystal-wrap">
             <div class="reliquary-crystal-shadow"></div>
             <svg class="reliquary-crystal-svg" viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg">
@@ -81,27 +96,46 @@
         <div class="reliquary-entity-info" id="reliquary-entity-info" style="display: none;">
             <div class="reliquary-entity-name" id="reliquary-entity-name"></div>
             <div class="reliquary-entity-nature" id="reliquary-entity-nature"></div>
-            <div class="reliquary-entity-tags">
-                <span class="reliquary-tag" id="reliquary-tag-mood"></span>
-                <span class="reliquary-tag" id="reliquary-tag-relationship"></span>
-            </div>
         </div>
 
         <!-- No entity message (shown when empty) -->
         <div class="reliquary-empty-state" id="reliquary-empty-state">
-            <div class="reliquary-empty-text">No entity bound</div>
-            <button class="reliquary-btn reliquary-btn-create" id="reliquary-btn-create">
-                CREATE VOICE
-            </button>
+            <div class="reliquary-empty-text">NO ENTITY BOUND</div>
+            <button class="reliquary-btn reliquary-btn-create" id="reliquary-btn-create">CREATE VOICE</button>
         </div>
+
+        <!-- Binding rings -->
+        <div class="rel-binding" id="reliquary-binding-area">
+            <div class="rel-binding-label">BINDING STRENGTH</div>
+            <div class="rel-binding-rings" id="reliquary-binding-rings">
+                <div class="rel-ring"></div>
+                <div class="rel-ring"></div>
+                <div class="rel-ring"></div>
+                <div class="rel-ring"></div>
+                <div class="rel-ring"></div>
+                <div class="rel-ring"></div>
+                <div class="rel-ring"></div>
+            </div>
+            <div class="rel-binding-state" id="reliquary-status-line">AWAITING</div>
+        </div>
+
+        <!-- Mood + Relationship tags -->
+        <div class="rel-entity-tags" id="reliquary-entity-tags">
+            <span class="rel-tag" id="reliquary-tag-mood"></span>
+            <span class="rel-tag" id="reliquary-tag-relationship"></span>
+        </div>
+
     </div>
 
-    <!-- Status line -->
-    <div class="reliquary-status">
-        <span class="reliquary-status-line" id="reliquary-status-line">AWAITING</span>
+    <!-- COMMENTARY — latest entity comment -->
+    <div class="rel-commentary">
+        <div class="rel-commentary-text" id="reliquary-last-commentary">
+            <em>The seal holds. Nothing stirs — yet.</em>
+        </div>
+        <div class="rel-commentary-rune">◇ ✦ ◇</div>
     </div>
 
-    <!-- Tab Bar -->
+    <!-- TAB BAR -->
     <div class="reliquary-tabs">
         <button class="reliquary-tab active" data-tab="entity">ENTITY</button>
         <button class="reliquary-tab" data-tab="sidebar">SIDEBAR</button>
@@ -109,7 +143,7 @@
         <button class="reliquary-tab" data-tab="library">LIBRARY</button>
     </div>
 
-    <!-- Tab Content -->
+    <!-- TAB CONTENT -->
     <div class="reliquary-tab-content">
 
         <!-- ENTITY TAB -->
@@ -155,9 +189,7 @@
                     <div class="reliquary-agitation-value" id="reliquary-agitation-value">0</div>
                 </div>
             </div>
-            <div class="reliquary-trigger-list" id="reliquary-trigger-list">
-                <!-- Populated by JS -->
-            </div>
+            <div class="reliquary-trigger-list" id="reliquary-trigger-list"></div>
         </div>
 
         <!-- LIBRARY TAB -->

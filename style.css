@@ -1,23 +1,31 @@
 /* ============================================================
    THE RELIQUARY — Stylesheet
-   Two palettes: House Veridian + The Feathered Host
+   Matching the panel mockup aesthetic
    ============================================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400&display=swap');
+
 /* ============================================================
-   CSS VARIABLES — VERIDIAN (default)
+   CSS VARIABLES — VERIDIAN
    ============================================================ */
 .reliquary-theme-veridian {
     --rel-bg: #042112;
     --rel-bg-deep: #021a0e;
-    --rel-accent: rgba(155,127,54,1);
+    --rel-bg-card: rgba(155,127,54,0.03);
+    --rel-accent: #9b7f36;
     --rel-accent-dim: rgba(155,127,54,0.5);
     --rel-accent-ghost: rgba(155,127,54,0.12);
-    --rel-accent-bright: rgba(155,127,54,0.85);
-    --rel-text: rgba(155,127,54,0.7);
-    --rel-text-ghost: rgba(155,127,54,0.2);
+    --rel-accent-bright: rgba(155,127,54,0.9);
+    --rel-accent-faint: rgba(155,127,54,0.06);
+    --rel-accent-glow: rgba(155,127,54,0.15);
+    --rel-text: rgba(155,127,54,0.75);
+    --rel-text-bright: rgba(155,127,54,0.9);
     --rel-text-dim: rgba(155,127,54,0.4);
+    --rel-text-ghost: rgba(155,127,54,0.2);
     --rel-border: rgba(155,127,54,0.1);
     --rel-border-bright: rgba(155,127,54,0.25);
+    --rel-danger: rgba(180,80,60,0.7);
+    --rel-danger-glow: rgba(180,80,60,0.15);
 }
 
 /* ============================================================
@@ -26,15 +34,21 @@
 .reliquary-theme-feathered {
     --rel-bg: #1c1a14;
     --rel-bg-deep: #14120e;
-    --rel-accent: rgba(207,191,162,1);
+    --rel-bg-card: rgba(207,191,162,0.03);
+    --rel-accent: #cfbfa2;
     --rel-accent-dim: rgba(207,191,162,0.5);
     --rel-accent-ghost: rgba(207,191,162,0.12);
-    --rel-accent-bright: rgba(207,191,162,0.85);
+    --rel-accent-bright: rgba(207,191,162,0.9);
+    --rel-accent-faint: rgba(207,191,162,0.06);
+    --rel-accent-glow: rgba(207,191,162,0.15);
     --rel-text: rgba(207,191,162,0.7);
-    --rel-text-ghost: rgba(207,191,162,0.2);
+    --rel-text-bright: rgba(207,191,162,0.9);
     --rel-text-dim: rgba(207,191,162,0.4);
+    --rel-text-ghost: rgba(207,191,162,0.2);
     --rel-border: rgba(207,191,162,0.1);
     --rel-border-bright: rgba(207,191,162,0.25);
+    --rel-danger: rgba(180,100,80,0.7);
+    --rel-danger-glow: rgba(180,100,80,0.15);
 }
 
 /* ============================================================
@@ -44,7 +58,7 @@
     position: fixed;
     top: 0;
     right: 0;
-    width: 320px;
+    width: 380px;
     height: 100vh;
     background: var(--rel-bg);
     border-left: 1px solid var(--rel-border);
@@ -53,7 +67,7 @@
     flex-direction: column;
     overflow-y: auto;
     overflow-x: hidden;
-    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-family: 'EB Garamond', 'Georgia', serif;
     transition: background 0.8s;
 }
 
@@ -61,62 +75,156 @@
 @media (max-width: 1000px) {
     .reliquary-panel {
         width: 100%;
-        top: var(--topBarBlockSize, 40px);
-        height: calc(100vh - var(--topBarBlockSize, 40px));
+        top: 0;
+        height: 100vh;
+        height: 100dvh;
     }
 }
 
-/* ============================================================
-   HEADER — crystal + entity info
-   ============================================================ */
-.reliquary-header {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--rel-border);
-    min-height: 80px;
+/* Ambient background glow */
+.rel-ambient {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+.reliquary-theme-veridian .rel-ambient {
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(155,127,54,0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 30% 80%, rgba(80,120,60,0.03) 0%, transparent 40%);
+}
+.reliquary-theme-feathered .rel-ambient {
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(207,191,162,0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 90%, rgba(160,140,100,0.03) 0%, transparent 40%);
 }
 
-/* Crystal container */
+/* All content above ambient */
+.reliquary-panel > *:not(.rel-ambient) {
+    position: relative;
+    z-index: 1;
+}
+
+/* Scrollbar */
+.reliquary-panel::-webkit-scrollbar { width: 4px; }
+.reliquary-panel::-webkit-scrollbar-track { background: transparent; }
+.reliquary-panel::-webkit-scrollbar-thumb { background: var(--rel-border); border-radius: 2px; }
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.rel-header {
+    padding: 24px 20px 8px;
+    text-align: center;
+}
+
+.rel-title {
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 8px;
+    color: var(--rel-accent);
+    text-shadow: 0 0 25px var(--rel-accent-glow);
+}
+
+.rel-subtitle {
+    font-family: 'Crimson Text', serif;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--rel-text-dim);
+    margin-top: 4px;
+    letter-spacing: 1px;
+}
+
+.rel-creed {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: var(--rel-text-ghost);
+    margin-top: 8px;
+    text-transform: uppercase;
+}
+
+.rel-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 10px 0 4px;
+    color: var(--rel-text-ghost);
+    font-size: 8px;
+    letter-spacing: 4px;
+}
+.rel-divider::before,
+.rel-divider::after {
+    content: '';
+    width: 50px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rel-border-bright), transparent);
+}
+
+/* ============================================================
+   ENTITY CARD — bordered box with diamond corners
+   ============================================================ */
+.rel-entity-card {
+    margin: 8px 16px;
+    padding: 24px 20px 20px;
+    border: 1px solid var(--rel-border);
+    background: var(--rel-bg-card);
+    position: relative;
+    text-align: center;
+}
+
+.rel-corner {
+    position: absolute;
+    font-size: 8px;
+    color: var(--rel-text-ghost);
+    line-height: 1;
+}
+.rel-corner-tl { top: -5px; left: -5px; }
+.rel-corner-br { bottom: -5px; right: -5px; }
+
+/* ============================================================
+   CRYSTAL — large, centered in entity card
+   ============================================================ */
 .reliquary-crystal-wrap {
     position: relative;
-    width: 48px;
-    height: 68px;
-    flex-shrink: 0;
+    width: 110px;
+    height: 180px;
+    margin: 0 auto 16px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .reliquary-crystal-svg {
-    width: 32px;
-    height: 64px;
+    width: 90px;
+    height: 170px;
     position: relative;
     z-index: 2;
-    filter: drop-shadow(0 0 4px rgba(155,127,54,0.06));
+    filter: drop-shadow(0 0 12px var(--rel-accent-glow));
 }
 
 .reliquary-crystal-shadow {
     position: absolute;
-    bottom: 2px;
+    bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 24px;
-    height: 6px;
+    width: 50px;
+    height: 12px;
     border-radius: 50%;
-    background: rgba(155,127,54,0.15);
-    filter: blur(4px);
+    background: var(--rel-accent-ghost);
+    filter: blur(6px);
     z-index: 1;
 }
 
 /* Facets */
 .reliquary-facet {
-    stroke-width: 0.4;
+    stroke-width: 0.5;
     transition: fill 0.8s, stroke 0.8s;
 }
 .reliquary-vein {
-    stroke-width: 0.3;
+    stroke-width: 0.4;
     fill: none;
     opacity: 0.5;
     transition: stroke 0.8s;
@@ -145,79 +253,176 @@
     80% { opacity: .08; }
 }
 
-/* Entity info */
+/* ============================================================
+   ENTITY INFO (when entity exists)
+   ============================================================ */
 .reliquary-entity-info {
-    flex: 1;
-    min-width: 0;
+    text-align: center;
+    margin-bottom: 8px;
 }
 
 .reliquary-entity-name {
     font-family: 'Cinzel', serif;
-    font-size: 13px;
+    font-size: 20px;
+    font-weight: 600;
     color: var(--rel-accent);
-    letter-spacing: 2px;
+    letter-spacing: 5px;
     text-transform: uppercase;
 }
 
 .reliquary-entity-nature {
-    font-size: 10px;
+    font-family: 'Crimson Text', serif;
+    font-size: 14px;
     font-style: italic;
     color: var(--rel-text-dim);
-    margin-top: 2px;
-}
-
-.reliquary-entity-tags {
-    display: flex;
-    gap: 6px;
-    margin-top: 6px;
-    flex-wrap: wrap;
-}
-
-.reliquary-tag {
-    font-size: 7px;
+    margin-top: 4px;
     letter-spacing: 1px;
-    color: var(--rel-text-ghost);
-    padding: 2px 5px;
-    border: 1px solid var(--rel-border);
-    text-transform: uppercase;
 }
 
 /* Empty state */
 .reliquary-empty-state {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    text-align: center;
+    margin-bottom: 12px;
 }
 
 .reliquary-empty-text {
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: var(--rel-text-ghost);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--rel-text-dim);
     text-transform: uppercase;
+    margin-bottom: 14px;
 }
 
 .reliquary-empty-subtle {
-    font-size: 9px;
+    font-family: 'Crimson Text', serif;
+    font-size: 14px;
     color: var(--rel-text-ghost);
     font-style: italic;
-    padding: 8px 0;
+    padding: 10px 0;
 }
 
 /* ============================================================
-   STATUS LINE
+   BINDING RINGS — agitation meter
    ============================================================ */
-.reliquary-status {
+.rel-binding {
+    margin-top: 20px;
     text-align: center;
-    padding: 6px 16px;
-    border-bottom: 1px solid var(--rel-border);
 }
 
-.reliquary-status-line {
-    font-size: 7px;
+.rel-binding-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
     letter-spacing: 3px;
     color: var(--rel-text-ghost);
+    margin-bottom: 12px;
     text-transform: uppercase;
+}
+
+.rel-binding-rings {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.rel-ring {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--rel-border);
+    position: relative;
+    transition: all 0.6s;
+}
+
+.rel-ring.lit {
+    border-color: var(--rel-accent-dim);
+    background: var(--rel-accent-faint);
+    box-shadow: 0 0 8px var(--rel-accent-glow);
+}
+.rel-ring.lit::after {
+    content: '🜂';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: var(--rel-accent-dim);
+}
+
+.rel-ring.danger {
+    border-color: var(--rel-danger) !important;
+    background: var(--rel-danger-glow) !important;
+    box-shadow: 0 0 10px var(--rel-danger-glow) !important;
+    animation: rel-danger-pulse 2s ease-in-out infinite;
+}
+.rel-ring.danger::after {
+    color: var(--rel-danger) !important;
+}
+@keyframes rel-danger-pulse {
+    0%, 100% { box-shadow: 0 0 6px var(--rel-danger-glow); }
+    50% { box-shadow: 0 0 16px var(--rel-danger-glow); }
+}
+
+.rel-binding-state {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 5px;
+    color: var(--rel-text-dim);
+    margin-top: 12px;
+    transition: all 0.6s;
+}
+.rel-binding-state.danger-text {
+    color: var(--rel-danger);
+    text-shadow: 0 0 8px var(--rel-danger-glow);
+}
+
+/* ============================================================
+   ENTITY TAGS (mood + relationship)
+   ============================================================ */
+.rel-entity-tags {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 14px;
+}
+
+.rel-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--rel-text-dim);
+    padding: 4px 10px;
+    border: 1px solid var(--rel-accent-ghost);
+    text-transform: uppercase;
+}
+
+.rel-tag:empty { display: none; }
+
+/* ============================================================
+   COMMENTARY — latest entity comment
+   ============================================================ */
+.rel-commentary {
+    margin: 16px 16px 12px;
+    padding: 18px 20px;
+    border-left: 2px solid var(--rel-accent-ghost);
+    position: relative;
+    min-height: 60px;
+}
+
+.rel-commentary-text {
+    font-family: 'Crimson Text', serif;
+    font-size: 16px;
+    font-style: italic;
+    color: var(--rel-text);
+    line-height: 1.7;
+}
+
+.rel-commentary-rune {
+    font-size: 10px;
+    color: var(--rel-text-ghost);
+    margin-top: 10px;
+    letter-spacing: 8px;
 }
 
 /* ============================================================
@@ -226,19 +431,21 @@
 .reliquary-tabs {
     display: flex;
     border-bottom: 1px solid var(--rel-border);
+    border-top: 1px solid var(--rel-border);
     flex-shrink: 0;
+    margin: 0 16px;
 }
 
 .reliquary-tab {
     flex: 1;
-    padding: 10px 4px;
+    padding: 12px 4px;
     background: transparent;
     border: none;
     border-bottom: 2px solid transparent;
     color: var(--rel-text-ghost);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 7px;
-    letter-spacing: 1px;
+    font-size: 9px;
+    letter-spacing: 1.5px;
     cursor: pointer;
     transition: all 0.3s;
     text-transform: uppercase;
@@ -249,7 +456,7 @@
 }
 
 .reliquary-tab.active {
-    color: var(--rel-text);
+    color: var(--rel-text-bright);
     border-bottom-color: var(--rel-accent-dim);
 }
 
@@ -264,7 +471,7 @@
 
 .reliquary-tab-pane {
     display: none;
-    padding: 12px 16px;
+    padding: 16px 20px;
 }
 
 .reliquary-tab-pane.active {
@@ -272,14 +479,15 @@
 }
 
 .reliquary-section {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .reliquary-section-label {
-    font-size: 7px;
-    letter-spacing: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
     color: var(--rel-text-ghost);
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     text-transform: uppercase;
 }
 
@@ -289,29 +497,30 @@
 .reliquary-agitation-bar {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .reliquary-agitation-meter {
     flex: 1;
-    height: 4px;
+    height: 6px;
     background: var(--rel-border);
-    border-radius: 2px;
+    border-radius: 3px;
     overflow: hidden;
 }
 
 .reliquary-agitation-fill {
     height: 100%;
     width: 0%;
-    border-radius: 2px;
+    border-radius: 3px;
     transition: width 0.5s, background 0.5s;
     background: var(--rel-accent-dim);
 }
 
 .reliquary-agitation-value {
-    font-size: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
     color: var(--rel-text-dim);
-    min-width: 20px;
+    min-width: 24px;
     text-align: right;
 }
 
@@ -325,40 +534,43 @@
 }
 
 .reliquary-trigger-category {
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 .reliquary-trigger-category-label {
-    font-size: 7px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
     letter-spacing: 2px;
     color: var(--rel-text-ghost);
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     text-transform: uppercase;
 }
 
 .reliquary-trigger-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px 0;
+    gap: 10px;
+    padding: 6px 0;
 }
 
 .reliquary-trigger-toggle {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     cursor: pointer;
+    accent-color: var(--rel-accent, #9b7f36);
 }
 
 .reliquary-trigger-name {
     flex: 1;
-    font-size: 9px;
-    color: var(--rel-text-dim);
+    font-family: 'Crimson Text', serif;
+    font-size: 14px;
+    color: var(--rel-text);
 }
 
 .reliquary-trigger-slider {
-    width: 60px;
+    width: 70px;
     -webkit-appearance: none;
-    height: 3px;
+    height: 4px;
     background: var(--rel-border);
     border-radius: 2px;
     outline: none;
@@ -366,18 +578,101 @@
 
 .reliquary-trigger-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     background: var(--rel-accent-dim);
     border-radius: 50%;
     cursor: pointer;
 }
 
 .reliquary-trigger-sens {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--rel-text-dim);
+    min-width: 14px;
+    text-align: center;
+}
+
+/* ============================================================
+   OBSERVATIONS
+   ============================================================ */
+.reliquary-observation {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rel-accent-faint);
+    font-family: 'Crimson Text', serif;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--rel-text);
+    line-height: 1.6;
+}
+
+.reliquary-observation .obs-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1px;
+    color: var(--rel-text-ghost);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    font-style: normal;
+}
+
+.reliquary-observation.permanent {
+    border-left: 2px solid var(--rel-accent-ghost);
+    padding-left: 12px;
+}
+
+.reliquary-observation.permanent .obs-type {
+    color: var(--rel-accent-dim);
+}
+
+/* ============================================================
+   CHARACTER OPINIONS
+   ============================================================ */
+.reliquary-opinion {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rel-accent-faint);
+}
+
+.reliquary-opinion-name {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: var(--rel-text-bright);
+    letter-spacing: 1px;
+}
+
+.reliquary-opinion-state {
+    font-family: 'JetBrains Mono', monospace;
     font-size: 8px;
     color: var(--rel-text-ghost);
-    min-width: 12px;
-    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+.reliquary-opinion-notes {
+    font-family: 'Crimson Text', serif;
+    font-size: 14px;
+    color: var(--rel-text);
+    font-style: italic;
+    margin-top: 6px;
+    line-height: 1.5;
+}
+
+/* ============================================================
+   COMMENTARY LOG (sidebar tab)
+   ============================================================ */
+.reliquary-commentary-entry {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rel-border);
+    font-family: 'Crimson Text', serif;
+    font-size: 15px;
+    color: var(--rel-text);
+    font-style: italic;
+    line-height: 1.7;
+}
+
+.reliquary-commentary-entry:last-child {
+    border-bottom: none;
 }
 
 /* ============================================================
@@ -386,38 +681,41 @@
 .reliquary-voice-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
 .reliquary-voice-card {
     border: 1px solid var(--rel-border);
-    padding: 10px 12px;
+    padding: 14px 16px;
     cursor: pointer;
-    transition: border-color 0.3s;
+    transition: border-color 0.3s, background 0.3s;
+    background: var(--rel-bg-card);
 }
 
 .reliquary-voice-card:hover {
     border-color: var(--rel-border-bright);
+    background: var(--rel-accent-faint);
 }
 
 .reliquary-voice-card-name {
     font-family: 'Cinzel', serif;
-    font-size: 11px;
+    font-size: 14px;
     color: var(--rel-accent);
-    letter-spacing: 1px;
+    letter-spacing: 2px;
 }
 
 .reliquary-voice-card-nature {
-    font-size: 8px;
-    color: var(--rel-text-ghost);
-    margin-top: 2px;
+    font-family: 'Crimson Text', serif;
+    font-size: 12px;
+    color: var(--rel-text-dim);
+    margin-top: 3px;
     font-style: italic;
 }
 
 .reliquary-library-actions {
     display: flex;
     gap: 8px;
-    margin-top: 12px;
+    margin-top: 16px;
     flex-wrap: wrap;
 }
 
@@ -425,13 +723,13 @@
    BUTTONS
    ============================================================ */
 .reliquary-btn {
-    padding: 6px 12px;
+    padding: 10px 16px;
     background: transparent;
     border: 1px solid var(--rel-border-bright);
     color: var(--rel-text-dim);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 8px;
-    letter-spacing: 1px;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 2px;
     cursor: pointer;
     transition: all 0.3s;
     text-transform: uppercase;
@@ -439,12 +737,24 @@
 
 .reliquary-btn:hover {
     border-color: var(--rel-accent-dim);
-    color: var(--rel-text);
+    color: var(--rel-accent);
+    background: var(--rel-accent-faint);
 }
 
 .reliquary-btn-create {
+    width: 100%;
     border-color: var(--rel-accent-dim);
     color: var(--rel-accent-dim);
+    padding: 12px 16px;
+    font-size: 12px;
+    letter-spacing: 3px;
+}
+
+.reliquary-btn-create:hover {
+    color: var(--rel-accent);
+    border-color: var(--rel-accent);
+    background: var(--rel-accent-faint);
+    box-shadow: 0 0 15px var(--rel-accent-faint);
 }
 
 /* ============================================================
@@ -453,8 +763,8 @@
 .reliquary-fab {
     position: fixed;
     z-index: 999;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     background: var(--rel-bg, #042112);
     border: 1px solid var(--rel-border-bright, rgba(155,127,54,0.25));
@@ -463,8 +773,8 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    font-size: 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
     transition: border-color 0.3s, color 0.3s;
     touch-action: none;
 }
@@ -474,7 +784,7 @@
     color: var(--rel-accent-bright);
 }
 
-/* Hide FAB on desktop (panel is always accessible) */
+/* Hide FAB on desktop */
 @media (min-width: 1001px) {
     .reliquary-fab { display: none; }
 }
@@ -503,73 +813,4 @@
     font-size: 11px;
     opacity: 0.6;
     margin: 4px 0 8px;
-}
-
-/* ============================================================
-   COMMENTARY (sidebar entries)
-   ============================================================ */
-.reliquary-commentary-entry {
-    padding: 8px 0;
-    border-bottom: 1px solid var(--rel-border);
-    font-size: 10px;
-    color: var(--rel-text);
-    font-style: italic;
-    line-height: 1.6;
-}
-
-.reliquary-commentary-entry:last-child {
-    border-bottom: none;
-}
-
-/* ============================================================
-   OBSERVATIONS
-   ============================================================ */
-.reliquary-observation {
-    padding: 6px 0;
-    border-bottom: 1px solid var(--rel-border);
-    font-size: 9px;
-    color: var(--rel-text-dim);
-    line-height: 1.5;
-}
-
-.reliquary-observation .obs-type {
-    font-size: 7px;
-    letter-spacing: 1px;
-    color: var(--rel-text-ghost);
-    text-transform: uppercase;
-    margin-bottom: 2px;
-}
-
-.reliquary-observation.permanent {
-    border-left: 2px solid var(--rel-accent-ghost);
-    padding-left: 8px;
-}
-
-/* ============================================================
-   CHARACTER OPINIONS
-   ============================================================ */
-.reliquary-opinion {
-    padding: 8px 0;
-    border-bottom: 1px solid var(--rel-border);
-}
-
-.reliquary-opinion-name {
-    font-size: 10px;
-    color: var(--rel-text);
-    letter-spacing: 1px;
-}
-
-.reliquary-opinion-state {
-    font-size: 8px;
-    color: var(--rel-text-ghost);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: 2px;
-}
-
-.reliquary-opinion-notes {
-    font-size: 9px;
-    color: var(--rel-text-dim);
-    font-style: italic;
-    margin-top: 4px;
 }
