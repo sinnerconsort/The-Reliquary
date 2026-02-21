@@ -5,7 +5,6 @@
 
 import {
     getContext,
-    renderExtensionTemplateAsync,
     extension_settings,
 } from '../../../extensions.js';
 
@@ -18,7 +17,6 @@ import {
 } from '../../../../script.js';
 
 import {
-    EXT_NAME,
     EXT_ID,
     LOG_PREFIX,
     THEMES,
@@ -45,6 +43,12 @@ import {
 // ============================================================
 // RUNTIME STATE (not persisted)
 // ============================================================
+
+const EXT_PATH = `scripts/extensions/third-party/The-Reliquary`;
+
+async function loadTemplate(name) {
+    return await $.get(`${EXT_PATH}/${name}.html`);
+}
 
 let crystalAnimFrame = null;
 let sloshTime = 0;
@@ -109,7 +113,7 @@ jQuery(async () => {
 // ============================================================
 
 async function addExtensionSettings() {
-    const html = await renderExtensionTemplateAsync(EXT_NAME, 'settings');
+    const html = await loadTemplate('settings');
     $('#extensions_settings2').append(html);
 
     const settings = getSettings();
@@ -210,7 +214,7 @@ function updateControlModeUI() {
 
 async function initUI() {
     // Load panel template
-    const panelHtml = await renderExtensionTemplateAsync(EXT_NAME, 'template');
+    const panelHtml = await loadTemplate('template');
     $('body').append(panelHtml);
 
     // Apply theme
