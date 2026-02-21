@@ -25,12 +25,12 @@ export const THEMES = {
         bleedWarm: [190, 170, 140],
         // Crystal facet shading
         crystal: {
-            light: 0.14,
-            mid: 0.06,
-            dark: 0.02,
+            light: 0.30,
+            mid: 0.16,
+            dark: 0.06,
             darkOverlay: 0.10,
-            edgeAlpha: 0.22,
-            veinAlpha: 0.30,
+            edgeAlpha: 0.45,
+            veinAlpha: 0.50,
         },
     },
     feathered: {
@@ -43,12 +43,12 @@ export const THEMES = {
         bleed: [40, 100, 60],            // forest green
         bleedWarm: [30, 80, 45],
         crystal: {
-            light: 0.12,
-            mid: 0.05,
-            dark: 0.015,
+            light: 0.26,
+            mid: 0.13,
+            dark: 0.05,
             darkOverlay: 0.10,
-            edgeAlpha: 0.20,
-            veinAlpha: 0.26,
+            edgeAlpha: 0.40,
+            veinAlpha: 0.45,
         },
     },
 };
