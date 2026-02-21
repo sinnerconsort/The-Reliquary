@@ -198,12 +198,33 @@
     justify-content: center;
 }
 
+/* Glow halo behind crystal */
+.reliquary-crystal-wrap::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px;
+    height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, var(--rel-accent-glow) 0%, transparent 70%);
+    filter: blur(12px);
+    z-index: 0;
+    animation: reliquary-halo-pulse 4s ease-in-out infinite;
+}
+
+@keyframes reliquary-halo-pulse {
+    0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+}
+
 .reliquary-crystal-svg {
     width: 90px;
     height: 170px;
     position: relative;
     z-index: 2;
-    filter: drop-shadow(0 0 12px var(--rel-accent-glow));
+    filter: drop-shadow(0 0 18px var(--rel-accent-glow)) drop-shadow(0 0 6px var(--rel-accent-ghost));
     animation: reliquary-crystal-float 5s ease-in-out infinite;
 }
 
@@ -227,13 +248,13 @@
 
 /* Facets */
 .reliquary-facet {
-    stroke-width: 0.5;
+    stroke-width: 0.6;
     transition: fill 0.8s, stroke 0.8s;
 }
 .reliquary-vein {
-    stroke-width: 0.4;
+    stroke-width: 0.5;
     fill: none;
-    opacity: 0.5;
+    opacity: 0.7;
     transition: stroke 0.8s;
 }
 

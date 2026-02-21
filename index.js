@@ -717,7 +717,7 @@ function startCrystalAnimation() {
             el.setAttribute('stop-color', `hsla(${160 + Math.sin(hueShift * 1.1) * 20}, 35%, 65%, 0.04)`));
 
         // Runes — bright host color
-        const runeAlpha = 0.45 + agPct * 0.45;
+        const runeAlpha = 0.6 + agPct * 0.35;
         document.querySelectorAll('.reliquary-rune').forEach(r => {
             r.setAttribute('fill', rgb(T.accentBright, runeAlpha));
         });
