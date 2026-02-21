@@ -3,7 +3,7 @@
  * Constants, palettes, trigger definitions, defaults.
  */
 
-export const EXT_NAME = 'the-reliquary';
+export const EXT_NAME = 'The-Reliquary';
 export const EXT_ID = 'reliquary';
 export const LOG_PREFIX = '[Reliquary]';
 

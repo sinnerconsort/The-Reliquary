@@ -3,8 +3,8 @@
  * Global settings (extension_settings) + per-chat state (chat_metadata).
  */
 
-import { extension_settings } from '../../../extensions.js';
-import { chat_metadata, saveSettingsDebounced, saveChatDebounced } from '../../../../script.js';
+import { extension_settings } from '../../../../extensions.js';
+import { chat_metadata, saveSettingsDebounced, saveChatDebounced } from '../../../../../script.js';
 import { EXT_ID, LOG_PREFIX, TRIGGER_CATEGORIES } from './config.js';
 
 // ============================================================
