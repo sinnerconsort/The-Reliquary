@@ -71,13 +71,14 @@
     transition: background 0.8s;
 }
 
-/* Mobile: full width */
+/* Mobile: full width, account for ST top bar */
 @media (max-width: 1000px) {
     .reliquary-panel {
         width: 100%;
         top: 0;
         height: 100vh;
         height: 100dvh;
+        padding-top: var(--topBarBlockSize, 40px);
     }
 }
 
@@ -203,6 +204,12 @@
     position: relative;
     z-index: 2;
     filter: drop-shadow(0 0 12px var(--rel-accent-glow));
+    animation: reliquary-crystal-float 5s ease-in-out infinite;
+}
+
+@keyframes reliquary-crystal-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
 }
 
 .reliquary-crystal-shadow {
@@ -246,11 +253,11 @@
 .reliquary-r7 { animation: reliquary-twinkle 11s ease-in-out 4s infinite; }
 
 @keyframes reliquary-twinkle {
-    0%,100% { opacity: .08; }
-    25% { opacity: .55; }
-    40% { opacity: .1; }
-    60% { opacity: .4; }
-    80% { opacity: .08; }
+    0%,100% { opacity: .15; }
+    25% { opacity: .7; }
+    40% { opacity: .15; }
+    60% { opacity: .55; }
+    80% { opacity: .12; }
 }
 
 /* ============================================================
