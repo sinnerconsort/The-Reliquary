@@ -1,0 +1,575 @@
+/* ============================================================
+   THE RELIQUARY — Stylesheet
+   Two palettes: House Veridian + The Feathered Host
+   ============================================================ */
+
+/* ============================================================
+   CSS VARIABLES — VERIDIAN (default)
+   ============================================================ */
+.reliquary-theme-veridian {
+    --rel-bg: #042112;
+    --rel-bg-deep: #021a0e;
+    --rel-accent: rgba(155,127,54,1);
+    --rel-accent-dim: rgba(155,127,54,0.5);
+    --rel-accent-ghost: rgba(155,127,54,0.12);
+    --rel-accent-bright: rgba(155,127,54,0.85);
+    --rel-text: rgba(155,127,54,0.7);
+    --rel-text-ghost: rgba(155,127,54,0.2);
+    --rel-text-dim: rgba(155,127,54,0.4);
+    --rel-border: rgba(155,127,54,0.1);
+    --rel-border-bright: rgba(155,127,54,0.25);
+}
+
+/* ============================================================
+   CSS VARIABLES — FEATHERED HOST
+   ============================================================ */
+.reliquary-theme-feathered {
+    --rel-bg: #1c1a14;
+    --rel-bg-deep: #14120e;
+    --rel-accent: rgba(207,191,162,1);
+    --rel-accent-dim: rgba(207,191,162,0.5);
+    --rel-accent-ghost: rgba(207,191,162,0.12);
+    --rel-accent-bright: rgba(207,191,162,0.85);
+    --rel-text: rgba(207,191,162,0.7);
+    --rel-text-ghost: rgba(207,191,162,0.2);
+    --rel-text-dim: rgba(207,191,162,0.4);
+    --rel-border: rgba(207,191,162,0.1);
+    --rel-border-bright: rgba(207,191,162,0.25);
+}
+
+/* ============================================================
+   PANEL — main container
+   ============================================================ */
+.reliquary-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 320px;
+    height: 100vh;
+    background: var(--rel-bg);
+    border-left: 1px solid var(--rel-border);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    transition: background 0.8s;
+}
+
+/* Mobile: full width */
+@media (max-width: 1000px) {
+    .reliquary-panel {
+        width: 100%;
+        top: var(--topBarBlockSize, 40px);
+        height: calc(100vh - var(--topBarBlockSize, 40px));
+    }
+}
+
+/* ============================================================
+   HEADER — crystal + entity info
+   ============================================================ */
+.reliquary-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--rel-border);
+    min-height: 80px;
+}
+
+/* Crystal container */
+.reliquary-crystal-wrap {
+    position: relative;
+    width: 48px;
+    height: 68px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reliquary-crystal-svg {
+    width: 32px;
+    height: 64px;
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(0 0 4px rgba(155,127,54,0.06));
+}
+
+.reliquary-crystal-shadow {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(155,127,54,0.15);
+    filter: blur(4px);
+    z-index: 1;
+}
+
+/* Facets */
+.reliquary-facet {
+    stroke-width: 0.4;
+    transition: fill 0.8s, stroke 0.8s;
+}
+.reliquary-vein {
+    stroke-width: 0.3;
+    fill: none;
+    opacity: 0.5;
+    transition: stroke 0.8s;
+}
+
+/* Runes */
+.reliquary-rune {
+    font-family: serif;
+    dominant-baseline: middle;
+    text-anchor: middle;
+    transition: fill 1s;
+}
+.reliquary-r1 { animation: reliquary-twinkle 8s ease-in-out 0s infinite; }
+.reliquary-r2 { animation: reliquary-twinkle 7s ease-in-out 2s infinite; }
+.reliquary-r3 { animation: reliquary-twinkle 9s ease-in-out 1s infinite; }
+.reliquary-r4 { animation: reliquary-twinkle 7.5s ease-in-out 3.5s infinite; }
+.reliquary-r5 { animation: reliquary-twinkle 10s ease-in-out 1.5s infinite; }
+.reliquary-r6 { animation: reliquary-twinkle 8.5s ease-in-out 0.5s infinite; }
+.reliquary-r7 { animation: reliquary-twinkle 11s ease-in-out 4s infinite; }
+
+@keyframes reliquary-twinkle {
+    0%,100% { opacity: .08; }
+    25% { opacity: .55; }
+    40% { opacity: .1; }
+    60% { opacity: .4; }
+    80% { opacity: .08; }
+}
+
+/* Entity info */
+.reliquary-entity-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.reliquary-entity-name {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: var(--rel-accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.reliquary-entity-nature {
+    font-size: 10px;
+    font-style: italic;
+    color: var(--rel-text-dim);
+    margin-top: 2px;
+}
+
+.reliquary-entity-tags {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+.reliquary-tag {
+    font-size: 7px;
+    letter-spacing: 1px;
+    color: var(--rel-text-ghost);
+    padding: 2px 5px;
+    border: 1px solid var(--rel-border);
+    text-transform: uppercase;
+}
+
+/* Empty state */
+.reliquary-empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.reliquary-empty-text {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--rel-text-ghost);
+    text-transform: uppercase;
+}
+
+.reliquary-empty-subtle {
+    font-size: 9px;
+    color: var(--rel-text-ghost);
+    font-style: italic;
+    padding: 8px 0;
+}
+
+/* ============================================================
+   STATUS LINE
+   ============================================================ */
+.reliquary-status {
+    text-align: center;
+    padding: 6px 16px;
+    border-bottom: 1px solid var(--rel-border);
+}
+
+.reliquary-status-line {
+    font-size: 7px;
+    letter-spacing: 3px;
+    color: var(--rel-text-ghost);
+    text-transform: uppercase;
+}
+
+/* ============================================================
+   TAB BAR
+   ============================================================ */
+.reliquary-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--rel-border);
+    flex-shrink: 0;
+}
+
+.reliquary-tab {
+    flex: 1;
+    padding: 10px 4px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--rel-text-ghost);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+}
+
+.reliquary-tab:hover {
+    color: var(--rel-text-dim);
+}
+
+.reliquary-tab.active {
+    color: var(--rel-text);
+    border-bottom-color: var(--rel-accent-dim);
+}
+
+/* ============================================================
+   TAB CONTENT
+   ============================================================ */
+.reliquary-tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.reliquary-tab-pane {
+    display: none;
+    padding: 12px 16px;
+}
+
+.reliquary-tab-pane.active {
+    display: block;
+}
+
+.reliquary-section {
+    margin-bottom: 16px;
+}
+
+.reliquary-section-label {
+    font-size: 7px;
+    letter-spacing: 2px;
+    color: var(--rel-text-ghost);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+/* ============================================================
+   AGITATION METER
+   ============================================================ */
+.reliquary-agitation-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.reliquary-agitation-meter {
+    flex: 1;
+    height: 4px;
+    background: var(--rel-border);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.reliquary-agitation-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 2px;
+    transition: width 0.5s, background 0.5s;
+    background: var(--rel-accent-dim);
+}
+
+.reliquary-agitation-value {
+    font-size: 9px;
+    color: var(--rel-text-dim);
+    min-width: 20px;
+    text-align: right;
+}
+
+/* ============================================================
+   TRIGGER LIST
+   ============================================================ */
+.reliquary-trigger-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.reliquary-trigger-category {
+    margin-bottom: 12px;
+}
+
+.reliquary-trigger-category-label {
+    font-size: 7px;
+    letter-spacing: 2px;
+    color: var(--rel-text-ghost);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.reliquary-trigger-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.reliquary-trigger-toggle {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.reliquary-trigger-name {
+    flex: 1;
+    font-size: 9px;
+    color: var(--rel-text-dim);
+}
+
+.reliquary-trigger-slider {
+    width: 60px;
+    -webkit-appearance: none;
+    height: 3px;
+    background: var(--rel-border);
+    border-radius: 2px;
+    outline: none;
+}
+
+.reliquary-trigger-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: var(--rel-accent-dim);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.reliquary-trigger-sens {
+    font-size: 8px;
+    color: var(--rel-text-ghost);
+    min-width: 12px;
+    text-align: center;
+}
+
+/* ============================================================
+   VOICE LIBRARY
+   ============================================================ */
+.reliquary-voice-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.reliquary-voice-card {
+    border: 1px solid var(--rel-border);
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.reliquary-voice-card:hover {
+    border-color: var(--rel-border-bright);
+}
+
+.reliquary-voice-card-name {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    color: var(--rel-accent);
+    letter-spacing: 1px;
+}
+
+.reliquary-voice-card-nature {
+    font-size: 8px;
+    color: var(--rel-text-ghost);
+    margin-top: 2px;
+    font-style: italic;
+}
+
+.reliquary-library-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.reliquary-btn {
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid var(--rel-border-bright);
+    color: var(--rel-text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+}
+
+.reliquary-btn:hover {
+    border-color: var(--rel-accent-dim);
+    color: var(--rel-text);
+}
+
+.reliquary-btn-create {
+    border-color: var(--rel-accent-dim);
+    color: var(--rel-accent-dim);
+}
+
+/* ============================================================
+   FAB (Floating Action Button)
+   ============================================================ */
+.reliquary-fab {
+    position: fixed;
+    z-index: 999;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--rel-bg, #042112);
+    border: 1px solid var(--rel-border-bright, rgba(155,127,54,0.25));
+    color: var(--rel-accent-dim, rgba(155,127,54,0.5));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    transition: border-color 0.3s, color 0.3s;
+    touch-action: none;
+}
+
+.reliquary-fab:hover {
+    border-color: var(--rel-accent-dim);
+    color: var(--rel-accent-bright);
+}
+
+/* Hide FAB on desktop (panel is always accessible) */
+@media (min-width: 1001px) {
+    .reliquary-fab { display: none; }
+}
+
+/* ============================================================
+   SETTINGS (in Extensions tab)
+   ============================================================ */
+.reliquary-setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 6px 0;
+}
+
+.reliquary-setting-row label {
+    font-size: 12px;
+}
+
+.reliquary-setting-row select,
+.reliquary-setting-row input[type="number"] {
+    max-width: 160px;
+}
+
+.reliquary-setting-desc {
+    display: block;
+    font-size: 11px;
+    opacity: 0.6;
+    margin: 4px 0 8px;
+}
+
+/* ============================================================
+   COMMENTARY (sidebar entries)
+   ============================================================ */
+.reliquary-commentary-entry {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--rel-border);
+    font-size: 10px;
+    color: var(--rel-text);
+    font-style: italic;
+    line-height: 1.6;
+}
+
+.reliquary-commentary-entry:last-child {
+    border-bottom: none;
+}
+
+/* ============================================================
+   OBSERVATIONS
+   ============================================================ */
+.reliquary-observation {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--rel-border);
+    font-size: 9px;
+    color: var(--rel-text-dim);
+    line-height: 1.5;
+}
+
+.reliquary-observation .obs-type {
+    font-size: 7px;
+    letter-spacing: 1px;
+    color: var(--rel-text-ghost);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+.reliquary-observation.permanent {
+    border-left: 2px solid var(--rel-accent-ghost);
+    padding-left: 8px;
+}
+
+/* ============================================================
+   CHARACTER OPINIONS
+   ============================================================ */
+.reliquary-opinion {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--rel-border);
+}
+
+.reliquary-opinion-name {
+    font-size: 10px;
+    color: var(--rel-text);
+    letter-spacing: 1px;
+}
+
+.reliquary-opinion-state {
+    font-size: 8px;
+    color: var(--rel-text-ghost);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+.reliquary-opinion-notes {
+    font-size: 9px;
+    color: var(--rel-text-dim);
+    font-style: italic;
+    margin-top: 4px;
+}

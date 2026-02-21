@@ -1,0 +1,12 @@
+{
+    "display_name": "The Reliquary",
+    "loading_order": 150,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "sinnerconsort",
+    "version": "0.1.0",
+    "homePage": "https://github.com/sinnerconsort/the-reliquary",
+    "description": "A persistent entity lives inside your head — watching, learning, forming opinions, and fighting for the steering wheel."
+}

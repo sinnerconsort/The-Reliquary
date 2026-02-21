@@ -1,0 +1,179 @@
+<!-- The Reliquary — Main Panel -->
+<div id="reliquary-panel" class="reliquary-panel reliquary-theme-veridian" style="display: none;">
+
+    <!-- Header: Crystal + Entity Info -->
+    <div class="reliquary-header">
+        <div class="reliquary-crystal-wrap">
+            <div class="reliquary-crystal-shadow"></div>
+            <svg class="reliquary-crystal-svg" viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <clipPath id="reliquaryCrystalClip">
+                        <path d="M50,0 L65,8 L82,20 L92,35 L90,55 L88,80 L80,130 L65,170 L50,200 L35,170 L20,130 L12,80 L10,55 L8,35 L18,20 L35,8 Z" />
+                    </clipPath>
+                    <filter id="reliquaryFillBlur" x="-30%" y="-30%" width="160%" height="160%">
+                        <feGaussianBlur stdDeviation="6" />
+                    </filter>
+                    <filter id="reliquaryWaveBlur" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" />
+                    </filter>
+                    <linearGradient id="reliquaryPrismatic" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+                        <stop offset="0%" class="reliquary-pris-0" stop-color="rgba(120,180,220,0.06)" />
+                        <stop offset="30%" class="reliquary-pris-1" stop-color="rgba(200,180,120,0.08)" />
+                        <stop offset="60%" class="reliquary-pris-2" stop-color="rgba(210,160,180,0.06)" />
+                        <stop offset="100%" class="reliquary-pris-3" stop-color="rgba(140,200,180,0.04)" />
+                    </linearGradient>
+                </defs>
+
+                <!-- Fill layer -->
+                <g clip-path="url(#reliquaryCrystalClip)">
+                    <rect class="reliquary-fill-rect" x="-10" y="200" width="120" height="220" filter="url(#reliquaryFillBlur)" />
+                    <path class="reliquary-wave-1" d="" filter="url(#reliquaryWaveBlur)" />
+                    <path class="reliquary-wave-2" d="" filter="url(#reliquaryWaveBlur)" />
+                </g>
+
+                <!-- Facets -->
+                <polygon class="reliquary-facet reliquary-f-light" data-shade="light" points="35,8 50,0 65,8 50,18" />
+                <polygon class="reliquary-facet reliquary-f-mid" data-shade="mid" points="35,8 50,18 42,75 18,20" />
+                <polygon class="reliquary-facet reliquary-f-light" data-shade="light" points="65,8 82,20 58,75 50,18" />
+                <polygon class="reliquary-facet reliquary-f-dark" data-shade="dark" points="18,20 42,75 10,55 8,35" />
+                <polygon class="reliquary-facet reliquary-f-mid" data-shade="mid" points="82,20 92,35 90,55 58,75" />
+                <polygon class="reliquary-facet reliquary-f-light" data-shade="light" points="42,75 58,75 62,85 50,90 38,85" />
+                <polygon class="reliquary-facet reliquary-f-mid" data-shade="mid" points="10,55 42,75 38,85 30,120 12,80" />
+                <polygon class="reliquary-facet reliquary-f-dark" data-shade="dark" points="90,55 88,80 70,120 62,85 58,75" />
+                <polygon class="reliquary-facet reliquary-f-mid" data-shade="mid" points="38,85 50,90 62,85 70,120 65,170 50,200 35,170 30,120" />
+                <polygon class="reliquary-facet reliquary-f-dark" data-shade="dark" points="12,80 30,120 35,170 20,130" />
+                <polygon class="reliquary-facet reliquary-f-light" data-shade="light" points="88,80 80,130 65,170 70,120" />
+
+                <!-- Veins -->
+                <line class="reliquary-vein" x1="50" y1="0" x2="50" y2="18" />
+                <line class="reliquary-vein" x1="50" y1="18" x2="42" y2="75" />
+                <line class="reliquary-vein" x1="50" y1="18" x2="58" y2="75" />
+                <line class="reliquary-vein" x1="35" y1="8" x2="18" y2="20" />
+                <line class="reliquary-vein" x1="65" y1="8" x2="82" y2="20" />
+                <line class="reliquary-vein" x1="18" y1="20" x2="10" y2="55" />
+                <line class="reliquary-vein" x1="82" y1="20" x2="90" y2="55" />
+                <line class="reliquary-vein" x1="42" y1="75" x2="10" y2="55" />
+                <line class="reliquary-vein" x1="58" y1="75" x2="90" y2="55" />
+                <line class="reliquary-vein" x1="50" y1="90" x2="50" y2="200" />
+                <line class="reliquary-vein" x1="38" y1="85" x2="30" y2="120" />
+                <line class="reliquary-vein" x1="62" y1="85" x2="70" y2="120" />
+                <line class="reliquary-vein" x1="30" y1="120" x2="35" y2="170" />
+                <line class="reliquary-vein" x1="70" y1="120" x2="65" y2="170" />
+
+                <!-- Prismatic shimmer -->
+                <g clip-path="url(#reliquaryCrystalClip)">
+                    <rect class="reliquary-shimmer" x="-40" y="-20" width="180" height="240"
+                          fill="url(#reliquaryPrismatic)" opacity="0.5" />
+                </g>
+
+                <!-- Runes -->
+                <text class="reliquary-rune reliquary-r1" x="30" y="30" font-size="10">ᚱ</text>
+                <text class="reliquary-rune reliquary-r2" x="72" y="28" font-size="9">ᛉ</text>
+                <text class="reliquary-rune reliquary-r3" x="18" y="58" font-size="11">ᛈ</text>
+                <text class="reliquary-rune reliquary-r4" x="80" y="62" font-size="9">ᚦ</text>
+                <text class="reliquary-rune reliquary-r5" x="50" y="84" font-size="12">ᛗ</text>
+                <text class="reliquary-rune reliquary-r6" x="30" y="130" font-size="10">ᚨ</text>
+                <text class="reliquary-rune reliquary-r7" x="68" y="150" font-size="9">ᛟ</text>
+            </svg>
+        </div>
+
+        <!-- Entity info (shown when entity exists) -->
+        <div class="reliquary-entity-info" id="reliquary-entity-info" style="display: none;">
+            <div class="reliquary-entity-name" id="reliquary-entity-name"></div>
+            <div class="reliquary-entity-nature" id="reliquary-entity-nature"></div>
+            <div class="reliquary-entity-tags">
+                <span class="reliquary-tag" id="reliquary-tag-mood"></span>
+                <span class="reliquary-tag" id="reliquary-tag-relationship"></span>
+            </div>
+        </div>
+
+        <!-- No entity message (shown when empty) -->
+        <div class="reliquary-empty-state" id="reliquary-empty-state">
+            <div class="reliquary-empty-text">No entity bound</div>
+            <button class="reliquary-btn reliquary-btn-create" id="reliquary-btn-create">
+                CREATE VOICE
+            </button>
+        </div>
+    </div>
+
+    <!-- Status line -->
+    <div class="reliquary-status">
+        <span class="reliquary-status-line" id="reliquary-status-line">AWAITING</span>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="reliquary-tabs">
+        <button class="reliquary-tab active" data-tab="entity">ENTITY</button>
+        <button class="reliquary-tab" data-tab="sidebar">SIDEBAR</button>
+        <button class="reliquary-tab" data-tab="triggers">TRIGGERS</button>
+        <button class="reliquary-tab" data-tab="library">LIBRARY</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="reliquary-tab-content">
+
+        <!-- ENTITY TAB -->
+        <div class="reliquary-tab-pane active" id="reliquary-pane-entity">
+            <div class="reliquary-section">
+                <div class="reliquary-section-label">OBSERVATIONS</div>
+                <div class="reliquary-observations" id="reliquary-observations">
+                    <div class="reliquary-empty-subtle">Entity has not formed observations yet.</div>
+                </div>
+            </div>
+            <div class="reliquary-section">
+                <div class="reliquary-section-label">CHARACTER OPINIONS</div>
+                <div class="reliquary-opinions" id="reliquary-opinions">
+                    <div class="reliquary-empty-subtle">No characters encountered yet.</div>
+                </div>
+            </div>
+            <div class="reliquary-section">
+                <div class="reliquary-section-label">DEVELOPED TASTES</div>
+                <div class="reliquary-tastes" id="reliquary-tastes">
+                    <div class="reliquary-empty-subtle">Entity has not formed preferences yet.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIDEBAR TAB -->
+        <div class="reliquary-tab-pane" id="reliquary-pane-sidebar">
+            <div class="reliquary-section">
+                <div class="reliquary-section-label">RECENT COMMENTARY</div>
+                <div class="reliquary-commentary-log" id="reliquary-commentary-log">
+                    <div class="reliquary-empty-subtle">Silence.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRIGGERS TAB -->
+        <div class="reliquary-tab-pane" id="reliquary-pane-triggers">
+            <div class="reliquary-section">
+                <div class="reliquary-agitation-bar">
+                    <div class="reliquary-section-label">AGITATION</div>
+                    <div class="reliquary-agitation-meter">
+                        <div class="reliquary-agitation-fill" id="reliquary-agitation-fill"></div>
+                    </div>
+                    <div class="reliquary-agitation-value" id="reliquary-agitation-value">0</div>
+                </div>
+            </div>
+            <div class="reliquary-trigger-list" id="reliquary-trigger-list">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- LIBRARY TAB -->
+        <div class="reliquary-tab-pane" id="reliquary-pane-library">
+            <div class="reliquary-section">
+                <div class="reliquary-section-label">SAVED VOICES</div>
+                <div class="reliquary-voice-list" id="reliquary-voice-list">
+                    <div class="reliquary-empty-subtle">No voices saved yet.</div>
+                </div>
+            </div>
+            <div class="reliquary-library-actions">
+                <button class="reliquary-btn" id="reliquary-btn-save-voice">SAVE CURRENT</button>
+                <button class="reliquary-btn" id="reliquary-btn-import-voice">IMPORT JSON</button>
+                <button class="reliquary-btn" id="reliquary-btn-export-voice">EXPORT JSON</button>
+            </div>
+        </div>
+
+    </div>
+</div>
