@@ -261,8 +261,53 @@ function destroyUI() {
 }
 
 // ============================================================
-// FAB
+// FAB — Mini Crystal (draggable, color-shifting)
 // ============================================================
+
+const FAB_CRYSTAL_SVG = `<svg viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="fabGlow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" class="reliquary-fab-glow-inner" stop-color="rgba(207,191,162,0.2)"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+  </defs>
+  <!-- Glow halo -->
+  <ellipse cx="24" cy="28" rx="18" ry="22" fill="url(#fabGlow)" opacity="0.6"/>
+  <!-- Crystal facets (simplified) -->
+  <polygon class="reliquary-fab-facet" data-shade="light" points="17,4 24,0 31,4 24,9"/>
+  <polygon class="reliquary-fab-facet" data-shade="mid" points="17,4 24,9 20,36 9,10"/>
+  <polygon class="reliquary-fab-facet" data-shade="light" points="31,4 39,10 28,36 24,9"/>
+  <polygon class="reliquary-fab-facet" data-shade="dark" points="9,10 20,36 5,27 4,17"/>
+  <polygon class="reliquary-fab-facet" data-shade="mid" points="39,10 44,17 43,27 28,36"/>
+  <polygon class="reliquary-fab-facet" data-shade="light" points="20,36 28,36 30,41 24,44 18,41"/>
+  <polygon class="reliquary-fab-facet" data-shade="mid" points="5,27 20,36 18,41 14,58 6,39"/>
+  <polygon class="reliquary-fab-facet" data-shade="dark" points="43,27 42,39 34,58 30,41 28,36"/>
+  <polygon class="reliquary-fab-facet" data-shade="mid" points="18,41 24,44 30,41 34,58 32,64 24,64 16,64 14,58"/>
+  <!-- Veins -->
+  <line class="reliquary-fab-vein" x1="24" y1="0" x2="24" y2="44"/>
+  <line class="reliquary-fab-vein" x1="9" y1="10" x2="39" y2="10"/>
+  <line class="reliquary-fab-vein" x1="5" y1="27" x2="43" y2="27"/>
+</svg>`;
+
+// Color palettes for FAB lerp
+const FAB_COLORS = {
+    calm: { // Feathered Host (warm cream) — you, the host
+        light: [207, 191, 162],
+        mid:   [207, 191, 162],
+        dark:  [207, 191, 162],
+        edge:  [207, 191, 162],
+        glow:  [207, 191, 162],
+        lightA: 0.35, midA: 0.2, darkA: 0.1, edgeA: 0.5, glowA: 0.2,
+    },
+    agitated: { // Veridian (green/gold) — the entity
+        light: [155, 127, 54],
+        mid:   [155, 127, 54],
+        dark:  [80, 120, 60],
+        edge:  [155, 127, 54],
+        glow:  [155, 127, 54],
+        lightA: 0.45, midA: 0.3, darkA: 0.15, edgeA: 0.6, glowA: 0.35,
+    },
+};
 
 function createFAB() {
     if ($('.reliquary-fab').length) return;
@@ -270,11 +315,18 @@ function createFAB() {
     const settings = getSettings();
     const pos = settings.fabPosition || { top: '80px', right: '12px' };
 
-    const $fab = $(`<button class="reliquary-fab" title="The Reliquary">◆</button>`);
+    const $fab = $(`<button class="reliquary-fab" title="The Reliquary">${FAB_CRYSTAL_SVG}</button>`);
     $fab.css({ top: pos.top, right: pos.right });
     $('body').append($fab);
 
-    $fab.on('click', togglePanel);
+    $fab.on('click', (e) => {
+        // Don't toggle if we just finished dragging
+        if ($fab.data('justDragged')) {
+            $fab.data('justDragged', false);
+            return;
+        }
+        togglePanel();
+    });
 
     // Apply theme class for FAB colors
     $fab.addClass(`reliquary-theme-${settings.theme}`);
@@ -283,6 +335,124 @@ function createFAB() {
     if (window.innerWidth > 1000) {
         $fab.hide();
     }
+
+    // Initialize FAB colors
+    updateFABColors();
+
+    // Make draggable
+    makeFABDraggable($fab);
+}
+
+function makeFABDraggable($fab) {
+    let isDragging = false;
+    let startX, startY, startLeft, startTop;
+    let hasMoved = false;
+
+    const onStart = (e) => {
+        const touch = e.touches ? e.touches[0] : e;
+        isDragging = true;
+        hasMoved = false;
+
+        const rect = $fab[0].getBoundingClientRect();
+        startX = touch.clientX;
+        startY = touch.clientY;
+        startLeft = rect.left;
+        startTop = rect.top;
+
+        $fab.addClass('dragging');
+        e.preventDefault();
+    };
+
+    const onMove = (e) => {
+        if (!isDragging) return;
+        const touch = e.touches ? e.touches[0] : e;
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) hasMoved = true;
+        if (!hasMoved) return;
+
+        const newLeft = Math.max(0, Math.min(window.innerWidth - 48, startLeft + dx));
+        const newTop = Math.max(0, Math.min(window.innerHeight - 64, startTop + dy));
+
+        $fab.css({
+            left: newLeft + 'px',
+            top: newTop + 'px',
+            right: 'auto',
+        });
+    };
+
+    const onEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        $fab.removeClass('dragging');
+
+        if (hasMoved) {
+            $fab.data('justDragged', true);
+            // Save position
+            const settings = getSettings();
+            settings.fabPosition = {
+                top: $fab.css('top'),
+                left: $fab.css('left'),
+                right: 'auto',
+            };
+            saveSettings(settings);
+
+            // Reset justDragged after a tick so click doesn't fire
+            setTimeout(() => $fab.data('justDragged', false), 300);
+        }
+    };
+
+    $fab[0].addEventListener('touchstart', onStart, { passive: false });
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+    $fab[0].addEventListener('mousedown', onStart);
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onEnd);
+}
+
+function updateFABColors() {
+    const $fab = $('.reliquary-fab');
+    if (!$fab.length) return;
+
+    const state = getChatState();
+    const agPct = Math.min(1, (state?.agitation || 0) / 100);
+
+    const calm = FAB_COLORS.calm;
+    const hot = FAB_COLORS.agitated;
+
+    const lerp = (a, b, t) => Math.round(a + (b - a) * t);
+    const lerpA = (a, b, t) => a + (b - a) * t;
+    const rgb = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+
+    const lC = [lerp(calm.light[0], hot.light[0], agPct), lerp(calm.light[1], hot.light[1], agPct), lerp(calm.light[2], hot.light[2], agPct)];
+    const mC = [lerp(calm.mid[0], hot.mid[0], agPct), lerp(calm.mid[1], hot.mid[1], agPct), lerp(calm.mid[2], hot.mid[2], agPct)];
+    const dC = [lerp(calm.dark[0], hot.dark[0], agPct), lerp(calm.dark[1], hot.dark[1], agPct), lerp(calm.dark[2], hot.dark[2], agPct)];
+    const eC = [lerp(calm.edge[0], hot.edge[0], agPct), lerp(calm.edge[1], hot.edge[1], agPct), lerp(calm.edge[2], hot.edge[2], agPct)];
+    const gC = [lerp(calm.glow[0], hot.glow[0], agPct), lerp(calm.glow[1], hot.glow[1], agPct), lerp(calm.glow[2], hot.glow[2], agPct)];
+
+    const lA = lerpA(calm.lightA, hot.lightA, agPct);
+    const mA = lerpA(calm.midA, hot.midA, agPct);
+    const dA = lerpA(calm.darkA, hot.darkA, agPct);
+    const eA = lerpA(calm.edgeA, hot.edgeA, agPct);
+
+    $fab.find('.reliquary-fab-facet').each(function() {
+        const shade = $(this).attr('data-shade');
+        if (shade === 'light') {
+            $(this).attr('fill', rgb(lC, lA)).attr('stroke', rgb(eC, eA));
+        } else if (shade === 'mid') {
+            $(this).attr('fill', rgb(mC, mA)).attr('stroke', rgb(eC, eA));
+        } else {
+            $(this).attr('fill', rgb(dC, dA)).attr('stroke', rgb(eC, eA));
+        }
+    });
+
+    $fab.find('.reliquary-fab-vein').each(function() {
+        $(this).attr('stroke', rgb(eC, eA * 0.7));
+    });
+
+    // Update glow
+    $fab.find('.reliquary-fab-glow-inner').attr('stop-color', rgb(gC, lerpA(calm.glowA, hot.glowA, agPct)));
 }
 
 function togglePanel() {
@@ -300,11 +470,15 @@ function togglePanel() {
 
 function applyTheme() {
     const settings = getSettings();
-    const theme = settings.theme || 'veridian';
+    const theme = settings.theme || 'feathered';
 
     const $panel = $('#reliquary-panel');
     $panel.removeClass('reliquary-theme-veridian reliquary-theme-feathered');
     $panel.addClass(`reliquary-theme-${theme}`);
+
+    // Update creed text based on theme
+    const T = THEMES[theme] || THEMES.feathered;
+    $('#reliquary-creed').text(T.creed.toUpperCase());
 
     // Update FAB theme too
     $('.reliquary-fab')
@@ -721,6 +895,12 @@ function startCrystalAnimation() {
         document.querySelectorAll('.reliquary-rune').forEach(r => {
             r.setAttribute('fill', rgb(T.accentBright, runeAlpha));
         });
+
+        // Update FAB crystal colors (throttled — every ~500ms)
+        if (!animate._lastFab || now - animate._lastFab > 500) {
+            animate._lastFab = now;
+            updateFABColors();
+        }
     }
 
     crystalAnimFrame = requestAnimationFrame(animate);
