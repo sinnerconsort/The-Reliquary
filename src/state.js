@@ -30,7 +30,7 @@ const DEFAULT_SETTINGS = {
     triggers: buildDefaultTriggers(),
 
     // Theme
-    theme: 'veridian',  // veridian | feathered
+    theme: 'feathered',  // feathered | veridian
 
     // Observation system
     observationFrequency: 10,
