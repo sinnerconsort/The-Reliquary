@@ -786,57 +786,95 @@
 }
 
 /* ============================================================
-   FAB — Mini Crystal (draggable, color-shifting)
+   FAB — Sigil (draggable, pulsing gold)
    ============================================================ */
 .reliquary-fab {
     position: fixed;
     z-index: 999;
-    width: 48px;
-    height: 64px;
-    background: transparent;
-    border: none;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 45%, rgba(155,127,54,0.12) 0%, rgba(10,10,12,0.95) 70%);
+    border: 1px solid rgba(155,127,54,0.25);
+    color: rgba(155,127,54,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    font-size: 28px;
+    line-height: 1;
+    box-shadow:
+        0 0 12px rgba(155,127,54,0.1),
+        0 0 24px rgba(155,127,54,0.05),
+        0 2px 8px rgba(0,0,0,0.5);
     touch-action: none;
-    padding: 0;
-    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
-    transition: filter 0.3s;
     -webkit-tap-highlight-color: transparent;
+    animation: reliquary-fab-pulse 4s ease-in-out infinite;
+    transition: border-color 0.8s, color 0.8s, box-shadow 0.8s;
 }
 
-.reliquary-fab:hover,
-.reliquary-fab:active {
-    filter: drop-shadow(0 2px 12px rgba(0,0,0,0.6)) drop-shadow(0 0 8px var(--rel-fab-glow, rgba(207,191,162,0.3)));
+@keyframes reliquary-fab-pulse {
+    0%, 100% {
+        box-shadow:
+            0 0 12px rgba(155,127,54,0.1),
+            0 0 24px rgba(155,127,54,0.05),
+            0 2px 8px rgba(0,0,0,0.5);
+    }
+    50% {
+        box-shadow:
+            0 0 18px rgba(155,127,54,0.2),
+            0 0 36px rgba(155,127,54,0.1),
+            0 2px 8px rgba(0,0,0,0.5);
+    }
+}
+
+/* Agitated state — brighter, faster pulse */
+.reliquary-fab.fab-agitated {
+    border-color: rgba(155,127,54,0.45);
+    color: rgba(155,127,54,0.85);
+    animation: reliquary-fab-pulse-hot 2s ease-in-out infinite;
+}
+
+@keyframes reliquary-fab-pulse-hot {
+    0%, 100% {
+        box-shadow:
+            0 0 16px rgba(155,127,54,0.2),
+            0 0 32px rgba(155,127,54,0.1),
+            0 2px 8px rgba(0,0,0,0.5);
+    }
+    50% {
+        box-shadow:
+            0 0 24px rgba(155,127,54,0.35),
+            0 0 48px rgba(155,127,54,0.15),
+            0 2px 8px rgba(0,0,0,0.5);
+    }
+}
+
+/* Danger state — red edge */
+.reliquary-fab.fab-danger {
+    border-color: rgba(180,80,60,0.5);
+    color: rgba(180,80,60,0.8);
+    animation: reliquary-fab-pulse-danger 1.5s ease-in-out infinite;
+}
+
+@keyframes reliquary-fab-pulse-danger {
+    0%, 100% {
+        box-shadow:
+            0 0 16px rgba(180,80,60,0.15),
+            0 0 32px rgba(180,80,60,0.08),
+            0 2px 8px rgba(0,0,0,0.5);
+    }
+    50% {
+        box-shadow:
+            0 0 24px rgba(180,80,60,0.3),
+            0 0 48px rgba(180,80,60,0.12),
+            0 2px 8px rgba(0,0,0,0.5);
+    }
 }
 
 .reliquary-fab.dragging {
-    filter: drop-shadow(0 4px 16px rgba(0,0,0,0.7));
-    opacity: 0.85;
-}
-
-.reliquary-fab svg {
-    width: 100%;
-    height: 100%;
-}
-
-/* FAB color variables — driven by JS based on agitation */
-.reliquary-fab {
-    --rel-fab-fill-light: rgba(207,191,162,0.35);
-    --rel-fab-fill-mid: rgba(207,191,162,0.2);
-    --rel-fab-fill-dark: rgba(207,191,162,0.1);
-    --rel-fab-edge: rgba(207,191,162,0.5);
-    --rel-fab-glow: rgba(207,191,162,0.3);
-}
-
-.reliquary-fab-facet { transition: fill 1.5s, stroke 1.5s; }
-.reliquary-fab-vein { fill: none; stroke-width: 0.8; transition: stroke 1.5s; }
-
-/* FAB float animation */
-.reliquary-fab svg {
-    animation: reliquary-fab-float 4s ease-in-out infinite;
-}
-@keyframes reliquary-fab-float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-3px); }
+    opacity: 0.7;
+    animation: none;
 }
 
 /* Hide FAB on desktop */
