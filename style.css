@@ -907,3 +907,378 @@
     opacity: 0.6;
     margin: 4px 0 8px;
 }
+
+/* ============================================================
+   CREATION OVERLAY
+   ============================================================ */
+.rel-creation-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    background: var(--rel-bg, #1c1a14);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    animation: rel-overlay-in 0.3s ease-out;
+}
+
+@keyframes rel-overlay-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Overlay header */
+.rel-creation-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--rel-border);
+    flex-shrink: 0;
+}
+
+.rel-creation-title {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    letter-spacing: 4px;
+    color: var(--rel-accent);
+}
+
+.rel-creation-close {
+    background: none;
+    border: 1px solid var(--rel-border);
+    color: var(--rel-text-ghost);
+    font-size: 14px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.rel-creation-close:hover {
+    border-color: var(--rel-border-bright);
+    color: var(--rel-text-dim);
+}
+
+.rel-creation-body {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Section labels in creation */
+.rel-creation-section {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--rel-text-ghost);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    margin-top: 20px;
+}
+
+.rel-creation-section:first-child {
+    margin-top: 0;
+}
+
+/* ============================================================
+   PRESET VOICE CARDS
+   ============================================================ */
+.rel-preset-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.rel-preset-card {
+    border: 1px solid var(--rel-border);
+    background: var(--rel-bg-card);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.rel-preset-card:hover,
+.rel-preset-card:active {
+    border-color: var(--rel-border-bright);
+    background: var(--rel-accent-faint);
+}
+
+.rel-preset-card-name {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    color: var(--rel-accent);
+    letter-spacing: 2px;
+}
+
+.rel-preset-card-source {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1px;
+    color: var(--rel-text-ghost);
+    text-transform: uppercase;
+    margin-top: 3px;
+}
+
+.rel-preset-card-hook {
+    font-family: 'Crimson Text', serif;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--rel-text);
+    margin-top: 8px;
+    line-height: 1.5;
+}
+
+.rel-preset-card-meta {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.rel-preset-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7px;
+    letter-spacing: 1px;
+    color: var(--rel-text-dim);
+    padding: 3px 8px;
+    border: 1px solid var(--rel-border);
+    text-transform: uppercase;
+}
+
+/* ============================================================
+   PRESET PREVIEW (full detail view)
+   ============================================================ */
+.rel-preview-name {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    color: var(--rel-accent);
+    letter-spacing: 4px;
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.rel-preview-source {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--rel-text-ghost);
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.rel-preview-field {
+    margin-bottom: 16px;
+}
+
+.rel-preview-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--rel-text-ghost);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.rel-preview-text {
+    font-family: 'Crimson Text', serif;
+    font-size: 14px;
+    color: var(--rel-text);
+    line-height: 1.65;
+}
+
+.rel-preview-voice {
+    font-family: 'Crimson Text', serif;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--rel-text);
+    line-height: 1.7;
+    padding: 14px 16px;
+    border-left: 2px solid var(--rel-accent-ghost);
+    white-space: pre-line;
+}
+
+.rel-preview-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 16px 0;
+    color: var(--rel-text-ghost);
+    font-size: 8px;
+}
+
+.rel-preview-divider::before,
+.rel-preview-divider::after {
+    content: '';
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rel-border-bright), transparent);
+}
+
+/* Bind button (primary action) */
+.rel-btn-bind {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--rel-accent-dim);
+    color: var(--rel-accent);
+    background: var(--rel-accent-faint);
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    margin-top: 20px;
+}
+
+.rel-btn-bind:hover {
+    border-color: var(--rel-accent);
+    background: var(--rel-accent-ghost);
+    box-shadow: 0 0 20px var(--rel-accent-faint);
+    text-shadow: 0 0 10px var(--rel-accent-glow);
+}
+
+/* Back button (secondary) */
+.rel-btn-back {
+    width: 100%;
+    padding: 10px 16px;
+    border: 1px solid var(--rel-border);
+    color: var(--rel-text-dim);
+    background: transparent;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    margin-top: 8px;
+}
+
+.rel-btn-back:hover {
+    border-color: var(--rel-border-bright);
+    color: var(--rel-text);
+}
+
+/* ============================================================
+   CUSTOM CREATION BUTTONS
+   ============================================================ */
+.rel-create-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.rel-create-option {
+    border: 1px solid var(--rel-border);
+    background: var(--rel-bg-card);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.rel-create-option:hover {
+    border-color: var(--rel-border-bright);
+    background: var(--rel-accent-faint);
+}
+
+.rel-create-option-name {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: var(--rel-accent);
+    letter-spacing: 2px;
+}
+
+.rel-create-option-desc {
+    font-family: 'Crimson Text', serif;
+    font-size: 13px;
+    color: var(--rel-text-dim);
+    font-style: italic;
+    margin-top: 4px;
+}
+
+/* ============================================================
+   ENTITY EDITOR FORM
+   ============================================================ */
+.rel-editor-field {
+    margin-bottom: 16px;
+}
+
+.rel-editor-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--rel-text-ghost);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.rel-editor-input,
+.rel-editor-select {
+    width: 100%;
+    background: var(--rel-bg-card);
+    border: 1px solid var(--rel-border);
+    color: var(--rel-text);
+    font-family: 'EB Garamond', serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.rel-editor-input:focus,
+.rel-editor-textarea:focus,
+.rel-editor-select:focus {
+    border-color: var(--rel-border-bright);
+}
+
+.rel-editor-textarea {
+    width: 100%;
+    min-height: 80px;
+    background: var(--rel-bg-card);
+    border: 1px solid var(--rel-border);
+    color: var(--rel-text);
+    font-family: 'Crimson Text', serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+    resize: vertical;
+    line-height: 1.6;
+    transition: border-color 0.3s;
+}
+
+.rel-editor-input::placeholder,
+.rel-editor-textarea::placeholder {
+    color: var(--rel-text-ghost);
+    font-style: italic;
+}
+
+.rel-editor-select {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+.rel-editor-row {
+    display: flex;
+    gap: 12px;
+}
+
+.rel-editor-row > .rel-editor-field {
+    flex: 1;
+}
+
+.rel-editor-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    color: var(--rel-text-ghost);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+}

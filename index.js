@@ -23,6 +23,8 @@ import {
     TRIGGER_CATEGORIES,
     AGITATION,
     CONTROL_MODES,
+    PRESET_VOICES,
+    ENTITY_NATURES,
 } from './src/config.js';
 
 import {
@@ -230,10 +232,7 @@ async function initUI() {
     });
 
     // Wire create button
-    $('#reliquary-btn-create').on('click', () => {
-        // TODO: Phase 2 — voice creation flow
-        toastr.info('Voice creation coming in Phase 2!', 'Reliquary');
-    });
+    $('#reliquary-btn-create').on('click', openCreationOverlay);
 
     // Wire library buttons
     $('#reliquary-btn-save-voice').on('click', onSaveVoice);
@@ -545,6 +544,373 @@ function renderLibraryTab() {
         });
         $list.append($card);
     });
+}
+
+// ============================================================
+// VOICE CREATION OVERLAY
+// ============================================================
+
+function openCreationOverlay() {
+    // Remove existing overlay if any
+    $('.rel-creation-overlay').remove();
+
+    const $overlay = $('<div class="rel-creation-overlay"></div>');
+    $overlay.html(buildChoiceScreen());
+    $('#reliquary-panel').append($overlay);
+}
+
+function closeCreationOverlay() {
+    $('.rel-creation-overlay').remove();
+}
+
+function buildChoiceScreen() {
+    let presetCards = '';
+    for (const p of PRESET_VOICES) {
+        presetCards += `
+            <div class="rel-preset-card" data-preset-id="${p.id}">
+                <div class="rel-preset-card-name">${p.name}</div>
+                <div class="rel-preset-card-source">${p.source}</div>
+                <div class="rel-preset-card-hook">${p.hook}</div>
+                <div class="rel-preset-card-meta">
+                    <span class="rel-preset-tag">${p.nature}</span>
+                    <span class="rel-preset-tag">${p.manifestationType}</span>
+                    <span class="rel-preset-tag">CHAT ${p.chattiness}/5</span>
+                </div>
+            </div>
+        `;
+    }
+
+    const html = `
+        <div class="rel-creation-header">
+            <div class="rel-creation-title">◇ CREATE VOICE</div>
+            <button class="rel-creation-close" data-action="close">✕</button>
+        </div>
+        <div class="rel-creation-body">
+            <div class="rel-creation-section">CHOOSE A PRESET</div>
+            <div class="rel-preset-grid">${presetCards}</div>
+
+            <div class="rel-creation-section" style="margin-top:28px">FORGE YOUR OWN</div>
+            <div class="rel-create-options">
+                <div class="rel-create-option" data-action="editor">
+                    <div class="rel-create-option-name">MANUAL CREATION</div>
+                    <div class="rel-create-option-desc">Fill in each field yourself. Full control.</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Wire events after a tick (needs to be in DOM)
+    setTimeout(() => wireChoiceEvents(), 10);
+    return html;
+}
+
+function wireChoiceEvents() {
+    // Close button
+    $('.rel-creation-overlay').on('click', '[data-action="close"]', closeCreationOverlay);
+
+    // Preset cards
+    $('.rel-creation-overlay').on('click', '.rel-preset-card', function () {
+        const presetId = $(this).data('preset-id');
+        const preset = PRESET_VOICES.find(p => p.id === presetId);
+        if (preset) showPresetPreview(preset);
+    });
+
+    // Manual editor
+    $('.rel-creation-overlay').on('click', '[data-action="editor"]', showEntityEditor);
+}
+
+function showPresetPreview(preset) {
+    const $body = $('.rel-creation-overlay');
+
+    // Escape voice examples for display
+    const voiceHtml = preset.voiceExample.replace(/\n/g, '<br>');
+
+    $body.html(`
+        <div class="rel-creation-header">
+            <div class="rel-creation-title">◇ PREVIEW</div>
+            <button class="rel-creation-close" data-action="close">✕</button>
+        </div>
+        <div class="rel-creation-body">
+            <div class="rel-preview-name">${preset.name}</div>
+            <div class="rel-preview-source">${preset.source} · ${preset.nature} · ${preset.manifestationType}</div>
+
+            <div class="rel-preview-divider">✦ ◆ ✦</div>
+
+            <div class="rel-preview-field">
+                <div class="rel-preview-label">PERSONALITY</div>
+                <div class="rel-preview-text">${preset.personality}</div>
+            </div>
+
+            <div class="rel-preview-field">
+                <div class="rel-preview-label">SPEAKING STYLE</div>
+                <div class="rel-preview-text">${preset.speakingStyle}</div>
+            </div>
+
+            <div class="rel-preview-field">
+                <div class="rel-preview-label">OBSESSION</div>
+                <div class="rel-preview-text">${preset.obsession}</div>
+            </div>
+
+            <div class="rel-preview-field">
+                <div class="rel-preview-label">BLIND SPOT</div>
+                <div class="rel-preview-text">${preset.blindSpot}</div>
+            </div>
+
+            <div class="rel-preview-field">
+                <div class="rel-preview-label">OPINION OF YOU</div>
+                <div class="rel-preview-text">${preset.opinionOfYou}</div>
+            </div>
+
+            <div class="rel-preview-field">
+                <div class="rel-preview-label">WANTS</div>
+                <div class="rel-preview-text">${preset.wants}</div>
+            </div>
+
+            <div class="rel-preview-field">
+                <div class="rel-preview-label">HOW IT APPEARS</div>
+                <div class="rel-preview-text">${preset.manifestation.hostPerception}</div>
+            </div>
+
+            <div class="rel-preview-field">
+                <div class="rel-preview-label">VOICE EXAMPLE</div>
+                <div class="rel-preview-voice">${voiceHtml}</div>
+            </div>
+
+            <button class="rel-btn-bind" data-action="bind-preset" data-preset-id="${preset.id}">
+                ◇ BIND THIS ENTITY ◇
+            </button>
+            <button class="rel-btn-back" data-action="back-to-choice">← BACK</button>
+        </div>
+    `);
+
+    // Wire events
+    $body.on('click', '[data-action="bind-preset"]', function () {
+        bindPresetEntity($(this).data('preset-id'));
+    });
+    $body.on('click', '[data-action="back-to-choice"]', () => {
+        $body.html(buildChoiceScreen());
+    });
+    $body.on('click', '[data-action="close"]', closeCreationOverlay);
+
+    // Scroll to top
+    $body.find('.rel-creation-body').scrollTop(0);
+}
+
+function showEntityEditor(existingData) {
+    const $body = $('.rel-creation-overlay');
+    const d = existingData || {};
+
+    const natureOptions = (ENTITY_NATURES || []).map(n =>
+        `<option value="${n.id}" ${d.nature === n.id ? 'selected' : ''}>${n.label} — ${n.desc}</option>`
+    ).join('');
+
+    const manifOptions = ['apparition', 'symbiote', 'vessel', 'impulse'].map(m =>
+        `<option value="${m}" ${d.manifestationType === m ? 'selected' : ''}>${m.charAt(0).toUpperCase() + m.slice(1)}</option>`
+    ).join('');
+
+    $body.html(`
+        <div class="rel-creation-header">
+            <div class="rel-creation-title">◇ FORGE ENTITY</div>
+            <button class="rel-creation-close" data-action="close">✕</button>
+        </div>
+        <div class="rel-creation-body">
+            <div class="rel-editor-row">
+                <div class="rel-editor-field">
+                    <label class="rel-editor-label">NAME</label>
+                    <input class="rel-editor-input" id="rel-ed-name" placeholder="What does it call itself?" value="${d.name || ''}">
+                </div>
+            </div>
+
+            <div class="rel-editor-row">
+                <div class="rel-editor-field">
+                    <label class="rel-editor-label">NATURE</label>
+                    <select class="rel-editor-select" id="rel-ed-nature">
+                        <option value="">Choose...</option>
+                        ${natureOptions}
+                    </select>
+                </div>
+                <div class="rel-editor-field">
+                    <label class="rel-editor-label">MANIFESTATION</label>
+                    <select class="rel-editor-select" id="rel-ed-manifest">
+                        <option value="">Choose...</option>
+                        ${manifOptions}
+                    </select>
+                </div>
+            </div>
+
+            <div class="rel-editor-field">
+                <label class="rel-editor-label">PERSONALITY</label>
+                <textarea class="rel-editor-textarea" id="rel-ed-personality" rows="4" placeholder="How does it think? What drives it?">${d.personality || ''}</textarea>
+            </div>
+
+            <div class="rel-editor-field">
+                <label class="rel-editor-label">SPEAKING STYLE</label>
+                <textarea class="rel-editor-textarea" id="rel-ed-style" rows="3" placeholder="How does it talk? Short sentences? Formal? Pet names?">${d.speakingStyle || ''}</textarea>
+            </div>
+
+            <div class="rel-editor-field">
+                <label class="rel-editor-label">OBSESSION</label>
+                <textarea class="rel-editor-textarea" id="rel-ed-obsession" rows="2" placeholder="What does it fixate on? What does it always come back to?">${d.obsession || ''}</textarea>
+            </div>
+
+            <div class="rel-editor-field">
+                <label class="rel-editor-label">BLIND SPOT</label>
+                <textarea class="rel-editor-textarea" id="rel-ed-blind" rows="2" placeholder="What can it NOT see clearly about itself?">${d.blindSpot || ''}</textarea>
+            </div>
+
+            <div class="rel-editor-field">
+                <label class="rel-editor-label">OPINION OF YOU</label>
+                <textarea class="rel-editor-textarea" id="rel-ed-opinion" rows="2" placeholder="How does it feel about the host?">${d.opinionOfYou || ''}</textarea>
+            </div>
+
+            <div class="rel-editor-field">
+                <label class="rel-editor-label">WANTS</label>
+                <textarea class="rel-editor-textarea" id="rel-ed-wants" rows="2" placeholder="What does it want? What's its goal?">${d.wants || ''}</textarea>
+            </div>
+
+            <div class="rel-editor-row">
+                <div class="rel-editor-field">
+                    <label class="rel-editor-label">CHATTINESS (1-5)</label>
+                    <input class="rel-editor-input" id="rel-ed-chat" type="number" min="1" max="5" value="${d.chattiness || 3}">
+                    <div class="rel-editor-hint">1 = near-silent, 5 = never shuts up</div>
+                </div>
+            </div>
+
+            <div class="rel-editor-field">
+                <label class="rel-editor-label">VOICE EXAMPLE</label>
+                <textarea class="rel-editor-textarea" id="rel-ed-voice" rows="4" placeholder="Write 2-3 lines in its voice...">${d.voiceExample || ''}</textarea>
+            </div>
+
+            <div class="rel-creation-section">MANIFESTATION</div>
+
+            <div class="rel-editor-field">
+                <label class="rel-editor-label">HOW IT APPEARS TO YOU</label>
+                <textarea class="rel-editor-textarea" id="rel-ed-host-percep" rows="2" placeholder="What do you see/feel when it's present?">${d.manifestation?.hostPerception || ''}</textarea>
+            </div>
+
+            <div class="rel-editor-field">
+                <label class="rel-editor-label">DURING POSSESSION</label>
+                <textarea class="rel-editor-textarea" id="rel-ed-possess-desc" rows="2" placeholder="What changes when it takes the wheel?">${d.manifestation?.possessionDesc || ''}</textarea>
+            </div>
+
+            <button class="rel-btn-bind" data-action="bind-custom">
+                ◇ BIND THIS ENTITY ◇
+            </button>
+            <button class="rel-btn-back" data-action="back-to-choice">← BACK</button>
+        </div>
+    `);
+
+    // Wire events
+    $body.on('click', '[data-action="bind-custom"]', bindCustomEntity);
+    $body.on('click', '[data-action="back-to-choice"]', () => {
+        $body.html(buildChoiceScreen());
+    });
+    $body.on('click', '[data-action="close"]', closeCreationOverlay);
+}
+
+function bindPresetEntity(presetId) {
+    const preset = PRESET_VOICES.find(p => p.id === presetId);
+    if (!preset) return;
+
+    const state = getChatState();
+    if (!state) return;
+
+    state.entity = {
+        id: `entity_${Date.now()}`,
+        name: preset.name,
+        nature: preset.nature,
+        personality: preset.personality,
+        speakingStyle: preset.speakingStyle,
+        obsession: preset.obsession,
+        blindSpot: preset.blindSpot,
+        opinionOfYou: preset.opinionOfYou,
+        wants: preset.wants,
+        chattiness: preset.chattiness,
+        voiceExample: preset.voiceExample,
+        manifestationType: preset.manifestationType,
+        manifestation: structuredClone(preset.manifestation),
+        triggerPreferences: structuredClone(preset.triggerPreferences),
+        source: preset.source,
+        presetId: preset.id,
+        created: Date.now(),
+    };
+
+    // Set default relationship/mood from preset
+    state.relationship = preset.defaultRelationship || 'curious';
+    state.mood = preset.defaultMood || 'watching';
+
+    // Apply trigger preferences
+    const settings = getSettings();
+    if (preset.triggerPreferences) {
+        for (const [key, val] of Object.entries(preset.triggerPreferences)) {
+            if (settings.triggers[key]) {
+                settings.triggers[key] = structuredClone(val);
+            }
+        }
+        saveSettings();
+    }
+
+    // Reset dynamic state
+    state.characterOpinions = {};
+    state.observations = [];
+    state.agitation = 0;
+    state.developedTastes = [];
+    state.directoryHistory = [];
+
+    saveChatState();
+
+    closeCreationOverlay();
+    renderPanel();
+    toastr.success(`${preset.name} bound to this chat.`, 'The Reliquary');
+    console.log(LOG_PREFIX, `Preset bound: ${preset.name}`);
+}
+
+function bindCustomEntity() {
+    const name = $('#rel-ed-name').val().trim();
+    if (!name) {
+        toastr.warning('The entity needs a name.', 'Reliquary');
+        return;
+    }
+
+    const state = getChatState();
+    if (!state) return;
+
+    state.entity = {
+        id: `entity_${Date.now()}`,
+        name: name,
+        nature: $('#rel-ed-nature').val() || 'custom',
+        personality: $('#rel-ed-personality').val().trim(),
+        speakingStyle: $('#rel-ed-style').val().trim(),
+        obsession: $('#rel-ed-obsession').val().trim(),
+        blindSpot: $('#rel-ed-blind').val().trim(),
+        opinionOfYou: $('#rel-ed-opinion').val().trim(),
+        wants: $('#rel-ed-wants').val().trim(),
+        chattiness: parseInt($('#rel-ed-chat').val()) || 3,
+        voiceExample: $('#rel-ed-voice').val().trim(),
+        manifestationType: $('#rel-ed-manifest').val() || 'apparition',
+        manifestation: {
+            hostPerception: $('#rel-ed-host-percep').val().trim(),
+            possessionDesc: $('#rel-ed-possess-desc').val().trim(),
+            externalTells: '',
+            sensorySignature: '',
+        },
+        created: Date.now(),
+    };
+
+    state.relationship = 'curious';
+    state.mood = 'watching';
+    state.characterOpinions = {};
+    state.observations = [];
+    state.agitation = 0;
+    state.developedTastes = [];
+    state.directoryHistory = [];
+
+    saveChatState();
+
+    closeCreationOverlay();
+    renderPanel();
+    toastr.success(`${name} bound to this chat.`, 'The Reliquary');
+    console.log(LOG_PREFIX, `Custom entity bound: ${name}`);
 }
 
 // ============================================================
