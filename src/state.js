@@ -75,6 +75,7 @@ const DEFAULT_CHAT_STATE = {
     lastCommentary: '',
     silentStreak: 0,
     developedTastes: [],
+    commentaryLog: [],
 
     // Hijack State
     activeHijack: null,
@@ -212,6 +213,7 @@ function sanitizeChatState() {
     if (!Array.isArray(s.relationshipHistory)) s.relationshipHistory = [];
     if (!Array.isArray(s.agitationLog)) s.agitationLog = [];
     if (!Array.isArray(s.developedTastes)) s.developedTastes = [];
+    if (!Array.isArray(s.commentaryLog)) s.commentaryLog = [];
     if (!Array.isArray(s.directoryHistory)) s.directoryHistory = [];
     if (!Array.isArray(s.hijackLog)) s.hijackLog = [];
 
