@@ -42,6 +42,11 @@ import {
     deleteVoice,
 } from './src/state.js';
 
+import {
+    shouldSpeak,
+    generateCommentary,
+} from './src/entity/engine.js';
+
 // ============================================================
 // RUNTIME STATE (not persisted)
 // ============================================================
@@ -415,6 +420,7 @@ function renderPanel() {
 
     renderHeader(state);
     renderStatus(state);
+    renderMainCommentary(state);
     renderEntityTab(state);
     renderTriggersTab(state);
     renderSidebarTab(state);
@@ -447,6 +453,17 @@ function renderStatus(state) {
         else text = 'U N B O U N D';
     }
     $('#reliquary-status-line').text(text);
+}
+
+function renderMainCommentary(state) {
+    const $el = $('#reliquary-last-commentary');
+    if (state.lastCommentary) {
+        $el.html(state.lastCommentary);
+    } else if (state.entity) {
+        $el.html('<em>Watching. Silent — for now.</em>');
+    } else {
+        $el.html('<em>The seal holds. Nothing stirs — yet.</em>');
+    }
 }
 
 function renderEntityTab(state) {
@@ -512,10 +529,22 @@ function renderTriggersTab(state) {
 function renderSidebarTab(state) {
     const $log = $('#reliquary-commentary-log');
     $log.empty();
-    if (!state.lastCommentary) {
+
+    const log = state.commentaryLog || [];
+    if (log.length === 0) {
         $log.html('<div class="reliquary-empty-subtle">Silence.</div>');
     } else {
-        $log.html(`<div class="reliquary-commentary-entry">${state.lastCommentary}</div>`);
+        // Show newest first, last 10
+        const recent = log.slice(-10).reverse();
+        recent.forEach((entry, i) => {
+            const opacity = i === 0 ? 1 : Math.max(0.4, 1 - (i * 0.08));
+            $log.append(`
+                <div class="reliquary-commentary-entry" style="opacity:${opacity}">
+                    <div class="reliquary-commentary-text">${entry.text}</div>
+                    <div class="reliquary-commentary-meta">msg #${entry.message || '?'}</div>
+                </div>
+            `);
+        });
     }
 }
 
@@ -1206,7 +1235,9 @@ function onChatChanged() {
     renderPanel();
 }
 
-function onMessageReceived() {
+let isGenerating = false;
+
+async function onMessageReceived() {
     if (!isEnabled()) return;
 
     const state = getChatState();
@@ -1217,8 +1248,46 @@ function onMessageReceived() {
     state.messagesSinceLastObservation++;
     state.messagesSinceLastHijack++;
 
-    // TODO Phase 3: Run classifier
-    // TODO Phase 3: Generate sidebar commentary
+    // ── COMMENTARY ENGINE ──
+    // Check if entity should speak this round
+    if (!isGenerating && shouldSpeak(state)) {
+        isGenerating = true;
+
+        try {
+            const commentary = await generateCommentary(state);
+
+            if (commentary) {
+                // Store commentary
+                state.lastCommentary = commentary;
+                state.silentStreak = 0;
+
+                // Add to log (keep last 20)
+                if (!state.commentaryLog) state.commentaryLog = [];
+                state.commentaryLog.push({
+                    text: commentary,
+                    message: state.totalMessages,
+                    timestamp: Date.now(),
+                });
+                if (state.commentaryLog.length > 20) {
+                    state.commentaryLog = state.commentaryLog.slice(-20);
+                }
+
+                console.log(LOG_PREFIX, `${state.entity.name} speaks:`, commentary);
+            } else {
+                // Entity chose silence or generation failed
+                state.silentStreak = (state.silentStreak || 0) + 1;
+            }
+        } catch (err) {
+            console.error(LOG_PREFIX, 'Commentary error:', err);
+            state.silentStreak = (state.silentStreak || 0) + 1;
+        } finally {
+            isGenerating = false;
+        }
+    } else {
+        // Not speaking this round
+        state.silentStreak = (state.silentStreak || 0) + 1;
+    }
+
     // TODO Phase 4: Run observation synthesis
     // TODO Phase 5: Relationship drift
     // TODO Phase 6: Hijack check
@@ -1248,5 +1317,30 @@ window.Reliquary = {
     renderPanel,
     togglePanel,
     resetChatState,
-    version: '0.1.0',
+    // Manual commentary trigger for testing
+    async speak() {
+        const state = getChatState();
+        if (!state?.entity) {
+            console.log(LOG_PREFIX, 'No entity bound');
+            return;
+        }
+        console.log(LOG_PREFIX, 'Forcing commentary...');
+        const commentary = await generateCommentary(state);
+        if (commentary) {
+            state.lastCommentary = commentary;
+            state.silentStreak = 0;
+            if (!state.commentaryLog) state.commentaryLog = [];
+            state.commentaryLog.push({
+                text: commentary,
+                message: state.totalMessages,
+                timestamp: Date.now(),
+            });
+            saveChatState();
+            renderPanel();
+            console.log(LOG_PREFIX, 'Commentary:', commentary);
+        } else {
+            console.log(LOG_PREFIX, 'Entity chose silence');
+        }
+    },
+    version: '0.2.0',
 };

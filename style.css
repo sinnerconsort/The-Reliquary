@@ -1277,3 +1277,32 @@
     margin-top: 4px;
     letter-spacing: 0.5px;
 }
+
+/* ============================================================
+   COMMENTARY LOG ENTRIES
+   ============================================================ */
+.reliquary-commentary-entry {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rel-border);
+}
+
+.reliquary-commentary-entry:last-child {
+    border-bottom: none;
+}
+
+.reliquary-commentary-text {
+    font-family: 'Crimson Text', serif;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--rel-text);
+    line-height: 1.6;
+}
+
+.reliquary-commentary-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7px;
+    letter-spacing: 1px;
+    color: var(--rel-text-ghost);
+    margin-top: 4px;
+    text-transform: uppercase;
+}
