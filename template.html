@@ -9,6 +9,7 @@
 
     <!-- HEADER -->
     <div class="rel-header">
+        <button class="rel-panel-close" id="reliquary-panel-close">✕</button>
         <div class="rel-title">THE RELIQUARY</div>
         <div class="rel-subtitle" id="reliquary-subtitle">something old lives here now</div>
         <div class="rel-creed" id="reliquary-creed">THE CYCLE MUST END</div>
@@ -18,6 +19,8 @@
     <!-- ENTITY CARD — bordered box with diamond corners -->
     <div class="rel-entity-card">
         <span class="rel-corner rel-corner-tl">◆</span>
+        <span class="rel-corner rel-corner-tr">◇</span>
+        <span class="rel-corner rel-corner-bl">◇</span>
         <span class="rel-corner rel-corner-br">◆</span>
 
         <!-- Crystal (always visible, centered) -->
@@ -144,6 +147,7 @@
         <button class="reliquary-tab" data-tab="sidebar">SIDEBAR</button>
         <button class="reliquary-tab" data-tab="triggers">TRIGGERS</button>
         <button class="reliquary-tab" data-tab="library">LIBRARY</button>
+        <button class="reliquary-tab" data-tab="settings">⚙</button>
     </div>
 
     <!-- TAB CONTENT -->
@@ -207,6 +211,72 @@
                 <button class="reliquary-btn" id="reliquary-btn-save-voice">SAVE CURRENT</button>
                 <button class="reliquary-btn" id="reliquary-btn-import-voice">IMPORT JSON</button>
                 <button class="reliquary-btn" id="reliquary-btn-export-voice">EXPORT JSON</button>
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div class="reliquary-tab-pane" id="reliquary-pane-settings">
+            <div class="reliquary-section">
+                <div class="reliquary-section-label">THEME</div>
+                <select class="rel-settings-select" id="reliquary-setting-theme">
+                    <option value="feathered">The Feathered Host</option>
+                    <option value="veridian">House Veridian</option>
+                </select>
+            </div>
+
+            <div class="reliquary-section">
+                <div class="reliquary-section-label">CONTROL MODE</div>
+                <select class="rel-settings-select" id="reliquary-setting-control">
+                    <option value="manual">Full Manual</option>
+                    <option value="auto">Full Auto</option>
+                    <option value="custom">Custom</option>
+                </select>
+                <div class="reliquary-setting-hint" id="reliquary-setting-control-desc"></div>
+
+                <div id="reliquary-setting-custom-toggles" style="display: none; margin-top: 12px;">
+                    <label class="rel-settings-toggle">
+                        <input type="checkbox" id="reliquary-st-sidebar" checked>
+                        <span>Sidebar Commentary</span>
+                    </label>
+                    <label class="rel-settings-toggle">
+                        <input type="checkbox" id="reliquary-st-directory" checked>
+                        <span>1-on-1 Commune</span>
+                    </label>
+                    <label class="rel-settings-toggle">
+                        <input type="checkbox" id="reliquary-st-intrusion" checked>
+                        <span>Tier 1 — Intrusion</span>
+                    </label>
+                    <label class="rel-settings-toggle">
+                        <input type="checkbox" id="reliquary-st-struggle" checked>
+                        <span>Tier 2 — Struggle</span>
+                    </label>
+                    <label class="rel-settings-toggle">
+                        <input type="checkbox" id="reliquary-st-possession">
+                        <span>Tier 3 — Possession</span>
+                    </label>
+                    <div class="rel-settings-row">
+                        <span class="rel-settings-row-label">Possession Cap</span>
+                        <input type="number" class="rel-settings-number" id="reliquary-st-cap" min="1" max="10" value="3">
+                    </div>
+                </div>
+            </div>
+
+            <div class="reliquary-section">
+                <div class="reliquary-section-label">OBSERVATION SYSTEM</div>
+                <div class="rel-settings-row">
+                    <span class="rel-settings-row-label">Synthesis every N messages</span>
+                    <input type="number" class="rel-settings-number" id="reliquary-st-obs-freq" min="3" max="30" value="10">
+                </div>
+                <div class="rel-settings-row">
+                    <span class="rel-settings-row-label">Max observations</span>
+                    <input type="number" class="rel-settings-number" id="reliquary-st-obs-max" min="5" max="50" value="20">
+                </div>
+            </div>
+
+            <div class="reliquary-section">
+                <div class="reliquary-section-label">ENTITY</div>
+                <button class="reliquary-btn reliquary-btn-danger" id="reliquary-btn-unbind">UNBIND ENTITY</button>
+                <div class="reliquary-setting-hint">Remove entity from this chat. Voice template is preserved in library.</div>
             </div>
         </div>
 

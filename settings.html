@@ -4,74 +4,10 @@
         <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
     </div>
     <div class="inline-drawer-content">
-        <!-- Enable/Disable -->
         <label class="checkbox_label">
             <input type="checkbox" id="reliquary-enabled">
             <span>Enable The Reliquary</span>
         </label>
-
-        <hr class="sysHR">
-
-        <!-- Theme Selection -->
-        <div class="reliquary-setting-row">
-            <label for="reliquary-theme">Theme</label>
-            <select id="reliquary-theme">
-                <option value="feathered">The Feathered Host</option>
-                <option value="veridian">House Veridian</option>
-            </select>
-        </div>
-
-        <hr class="sysHR">
-
-        <!-- Control Mode -->
-        <div class="reliquary-setting-row">
-            <label for="reliquary-control-mode">Control Mode</label>
-            <select id="reliquary-control-mode">
-                <option value="manual">Full Manual</option>
-                <option value="auto">Full Auto</option>
-                <option value="custom">Custom</option>
-            </select>
-        </div>
-        <small id="reliquary-control-desc" class="reliquary-setting-desc"></small>
-
-        <!-- Custom Toggles (shown when mode = custom) -->
-        <div id="reliquary-custom-toggles" style="display: none;">
-            <label class="checkbox_label">
-                <input type="checkbox" id="reliquary-toggle-sidebar">
-                <span>Sidebar Commentary</span>
-            </label>
-            <label class="checkbox_label">
-                <input type="checkbox" id="reliquary-toggle-directory">
-                <span>1-on-1 Directory</span>
-            </label>
-            <label class="checkbox_label">
-                <input type="checkbox" id="reliquary-toggle-intrusion">
-                <span>Tier 1 — Intrusion</span>
-            </label>
-            <label class="checkbox_label">
-                <input type="checkbox" id="reliquary-toggle-struggle">
-                <span>Tier 2 — Struggle</span>
-            </label>
-            <label class="checkbox_label">
-                <input type="checkbox" id="reliquary-toggle-possession">
-                <span>Tier 3 — Possession</span>
-            </label>
-            <div class="reliquary-setting-row">
-                <label for="reliquary-possession-cap">Possession Message Cap</label>
-                <input type="number" id="reliquary-possession-cap" min="1" max="10" value="3">
-            </div>
-        </div>
-
-        <hr class="sysHR">
-
-        <!-- Observation Frequency -->
-        <div class="reliquary-setting-row">
-            <label for="reliquary-obs-freq">Observation Synthesis (every N messages)</label>
-            <input type="number" id="reliquary-obs-freq" min="3" max="30" value="10">
-        </div>
-        <div class="reliquary-setting-row">
-            <label for="reliquary-obs-max">Max Observations</label>
-            <input type="number" id="reliquary-obs-max" min="5" max="50" value="20">
-        </div>
+        <small style="display:block; margin-top:8px; opacity:0.5;">All other settings are in the panel → ⚙ tab</small>
     </div>
 </div>

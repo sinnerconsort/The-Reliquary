@@ -125,7 +125,7 @@ async function addExtensionSettings() {
 
     const settings = getSettings();
 
-    // Enable toggle
+    // Enable toggle (only thing left in ST settings)
     $('#reliquary-enabled')
         .prop('checked', settings.enabled)
         .on('change', async function () {
@@ -141,78 +141,6 @@ async function addExtensionSettings() {
                 destroyUI();
             }
         });
-
-    // Theme
-    $('#reliquary-theme')
-        .val(settings.theme)
-        .on('change', function () {
-            settings.theme = $(this).val();
-            saveSettings();
-            applyTheme();
-        });
-
-    // Control mode
-    $('#reliquary-control-mode')
-        .val(settings.controlMode)
-        .on('change', function () {
-            settings.controlMode = $(this).val();
-            saveSettings();
-            updateControlModeUI();
-        });
-
-    // Custom toggles
-    const toggleMap = {
-        'reliquary-toggle-sidebar': 'sidebar',
-        'reliquary-toggle-directory': 'directory',
-        'reliquary-toggle-intrusion': 'intrusion',
-        'reliquary-toggle-struggle': 'struggle',
-        'reliquary-toggle-possession': 'possession',
-    };
-
-    for (const [elemId, key] of Object.entries(toggleMap)) {
-        $(`#${elemId}`)
-            .prop('checked', settings.customToggles[key])
-            .on('change', function () {
-                settings.customToggles[key] = $(this).prop('checked');
-                saveSettings();
-            });
-    }
-
-    $('#reliquary-possession-cap')
-        .val(settings.customToggles.possessionCap)
-        .on('change', function () {
-            settings.customToggles.possessionCap = parseInt($(this).val()) || 3;
-            saveSettings();
-        });
-
-    // Observation settings
-    $('#reliquary-obs-freq')
-        .val(settings.observationFrequency)
-        .on('change', function () {
-            settings.observationFrequency = parseInt($(this).val()) || 10;
-            saveSettings();
-        });
-
-    $('#reliquary-obs-max')
-        .val(settings.maxObservations)
-        .on('change', function () {
-            settings.maxObservations = parseInt($(this).val()) || 20;
-            saveSettings();
-        });
-
-    updateControlModeUI();
-}
-
-function updateControlModeUI() {
-    const settings = getSettings();
-    const mode = settings.controlMode;
-
-    // Show/hide custom toggles
-    $('#reliquary-custom-toggles').toggle(mode === 'custom');
-
-    // Update description
-    const desc = CONTROL_MODES[mode]?.desc || '';
-    $('#reliquary-control-desc').text(desc);
 }
 
 // ============================================================
@@ -243,6 +171,15 @@ async function initUI() {
     $('#reliquary-btn-save-voice').on('click', onSaveVoice);
     $('#reliquary-btn-import-voice').on('click', onImportVoice);
     $('#reliquary-btn-export-voice').on('click', onExportVoice);
+
+    // Wire close button
+    $('#reliquary-panel-close').on('click', () => togglePanel());
+
+    // Wire settings tab controls
+    wireSettingsTab();
+
+    // Wire unbind
+    $('#reliquary-btn-unbind').on('click', onUnbindEntity);
 
     // Start crystal animation
     startCrystalAnimation();
@@ -425,6 +362,7 @@ function renderPanel() {
     renderTriggersTab(state);
     renderSidebarTab(state);
     renderLibraryTab();
+    renderSettingsTab();
 }
 
 function renderHeader(state) {
@@ -952,6 +890,100 @@ function bindCustomEntity() {
     renderPanel();
     toastr.success(`${name} bound to this chat.`, 'The Reliquary');
     console.log(LOG_PREFIX, `Custom entity bound: ${name}`);
+}
+
+// ============================================================
+// SETTINGS TAB (in-panel)
+// ============================================================
+
+function wireSettingsTab() {
+    const settings = getSettings();
+    if (!settings) return;
+
+    // Theme
+    $('#reliquary-setting-theme').val(settings.theme).on('change', function () {
+        settings.theme = $(this).val();
+        saveSettings();
+        applyTheme();
+    });
+
+    // Control mode
+    $('#reliquary-setting-control').val(settings.controlMode).on('change', function () {
+        settings.controlMode = $(this).val();
+        saveSettings();
+        updateSettingsControlMode();
+    });
+    updateSettingsControlMode();
+
+    // Custom toggles
+    const ct = settings.customToggles;
+    $('#reliquary-st-sidebar').prop('checked', ct.sidebar).on('change', function () {
+        ct.sidebar = this.checked; saveSettings();
+    });
+    $('#reliquary-st-directory').prop('checked', ct.directory).on('change', function () {
+        ct.directory = this.checked; saveSettings();
+    });
+    $('#reliquary-st-intrusion').prop('checked', ct.intrusion).on('change', function () {
+        ct.intrusion = this.checked; saveSettings();
+    });
+    $('#reliquary-st-struggle').prop('checked', ct.struggle).on('change', function () {
+        ct.struggle = this.checked; saveSettings();
+    });
+    $('#reliquary-st-possession').prop('checked', ct.possession).on('change', function () {
+        ct.possession = this.checked; saveSettings();
+    });
+    $('#reliquary-st-cap').val(ct.possessionCap).on('change', function () {
+        ct.possessionCap = parseInt($(this).val()) || 3; saveSettings();
+    });
+
+    // Observation settings
+    $('#reliquary-st-obs-freq').val(settings.observationFrequency).on('change', function () {
+        settings.observationFrequency = parseInt($(this).val()) || 10; saveSettings();
+    });
+    $('#reliquary-st-obs-max').val(settings.maxObservations).on('change', function () {
+        settings.maxObservations = parseInt($(this).val()) || 20; saveSettings();
+    });
+}
+
+function updateSettingsControlMode() {
+    const settings = getSettings();
+    if (!settings) return;
+    const mode = settings.controlMode;
+    const desc = CONTROL_MODES[mode]?.desc || '';
+    $('#reliquary-setting-control-desc').text(desc);
+    $('#reliquary-setting-custom-toggles').toggle(mode === 'custom');
+}
+
+function renderSettingsTab() {
+    const settings = getSettings();
+    if (!settings) return;
+    // Sync values in case they changed externally
+    $('#reliquary-setting-theme').val(settings.theme);
+    $('#reliquary-setting-control').val(settings.controlMode);
+    updateSettingsControlMode();
+}
+
+function onUnbindEntity() {
+    const state = getChatState();
+    if (!state?.entity) {
+        toastr.info('No entity bound.', 'Reliquary');
+        return;
+    }
+    const name = state.entity.name;
+    if (!confirm(`Unbind ${name} from this chat? The voice template is preserved in your library.`)) return;
+
+    state.entity = null;
+    state.relationship = 'curious';
+    state.mood = 'watching';
+    state.agitation = 0;
+    state.lastCommentary = '';
+    state.commentaryLog = [];
+    state.observations = [];
+    state.characterOpinions = {};
+    state.developedTastes = [];
+    saveChatState();
+    renderPanel();
+    toastr.success(`${name} unbound.`, 'The Reliquary');
 }
 
 // ============================================================

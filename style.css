@@ -183,6 +183,8 @@
     line-height: 1;
 }
 .rel-corner-tl { top: -5px; left: -5px; }
+.rel-corner-tr { top: -5px; right: -5px; }
+.rel-corner-bl { bottom: -5px; left: -5px; }
 .rel-corner-br { bottom: -5px; right: -5px; }
 
 /* ============================================================
@@ -1305,4 +1307,121 @@
     color: var(--rel-text-ghost);
     margin-top: 4px;
     text-transform: uppercase;
+}
+
+/* ============================================================
+   PANEL CLOSE BUTTON
+   ============================================================ */
+.rel-panel-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: 1px solid var(--rel-border);
+    color: var(--rel-text-ghost);
+    font-size: 12px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    z-index: 5;
+    font-family: inherit;
+    line-height: 1;
+}
+.rel-panel-close:hover {
+    border-color: var(--rel-border-bright);
+    color: var(--rel-text-dim);
+}
+
+.rel-header {
+    position: relative;
+}
+
+/* ============================================================
+   SETTINGS TAB STYLES
+   ============================================================ */
+.rel-settings-select {
+    width: 100%;
+    background: var(--rel-bg-card, rgba(0,0,0,0.15));
+    border: 1px solid var(--rel-border);
+    color: var(--rel-text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 8px 12px;
+    outline: none;
+    margin-top: 6px;
+    transition: border-color 0.3s;
+    -webkit-appearance: none;
+    appearance: none;
+}
+.rel-settings-select:focus {
+    border-color: var(--rel-border-bright);
+}
+.rel-settings-select option {
+    background: #1a1a1a;
+    color: #ccc;
+}
+
+.reliquary-setting-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    color: var(--rel-text-ghost);
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+    line-height: 1.5;
+}
+
+.rel-settings-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    font-family: 'Crimson Text', serif;
+    font-size: 14px;
+    color: var(--rel-text);
+    cursor: pointer;
+}
+.rel-settings-toggle input[type="checkbox"] {
+    accent-color: var(--rel-accent, #cfbfa2);
+}
+
+.rel-settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    gap: 12px;
+}
+.rel-settings-row-label {
+    font-family: 'Crimson Text', serif;
+    font-size: 13px;
+    color: var(--rel-text);
+}
+
+.rel-settings-number {
+    width: 60px;
+    background: var(--rel-bg-card, rgba(0,0,0,0.15));
+    border: 1px solid var(--rel-border);
+    color: var(--rel-text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 6px 8px;
+    text-align: center;
+    outline: none;
+}
+.rel-settings-number:focus {
+    border-color: var(--rel-border-bright);
+}
+
+.reliquary-btn-danger {
+    border-color: rgba(180,80,60,0.3) !important;
+    color: rgba(180,80,60,0.7) !important;
+}
+.reliquary-btn-danger:hover {
+    border-color: rgba(180,80,60,0.6) !important;
+    background: rgba(180,80,60,0.08) !important;
 }
