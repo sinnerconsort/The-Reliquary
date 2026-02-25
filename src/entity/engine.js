@@ -3,8 +3,8 @@
  * Builds prompts, calls AI, decides when the entity speaks.
  */
 
-import { getContext } from '../../../../extensions.js';
-import { generateRaw } from '../../../../../script.js';
+import { getContext } from '../../../../../extensions.js';
+import { generateRaw } from '../../../../../../script.js';
 import { LOG_PREFIX, CHATTINESS } from '../config.js';
 
 // ============================================================
