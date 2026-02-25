@@ -1,6 +1,9 @@
 <!-- The Reliquary — Main Panel -->
 <div id="reliquary-panel" class="reliquary-panel reliquary-theme-veridian" style="display: none;">
 
+    <!-- MAIN CONTENT (hidden when creation overlay is open) -->
+    <div id="reliquary-main-content">
+
     <!-- Ambient background glow -->
     <div class="rel-ambient"></div>
 
@@ -208,4 +211,10 @@
         </div>
 
     </div>
+
+    </div><!-- /reliquary-main-content -->
+
+    <!-- CREATION OVERLAY (inserted here by JS, replaces main content) -->
+    <div id="reliquary-creation-container" style="display: none;"></div>
+
 </div>

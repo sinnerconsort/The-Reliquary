@@ -551,16 +551,19 @@ function renderLibraryTab() {
 // ============================================================
 
 function openCreationOverlay() {
-    // Remove existing overlay if any
-    $('.rel-creation-overlay').remove();
+    // Hide main content, show creation container
+    $('#reliquary-main-content').hide();
+    const $container = $('#reliquary-creation-container');
+    $container.empty().html(buildChoiceScreen()).show();
 
-    const $overlay = $('<div class="rel-creation-overlay"></div>');
-    $overlay.html(buildChoiceScreen());
-    $('#reliquary-panel').append($overlay);
+    // Scroll panel to top
+    $('#reliquary-panel').scrollTop(0);
+    $('#reliquary-panel').closest('.scrollableInner, .drawer-content, [class*="scroll"]').scrollTop(0);
 }
 
 function closeCreationOverlay() {
-    $('.rel-creation-overlay').remove();
+    $('#reliquary-creation-container').hide().empty();
+    $('#reliquary-main-content').show();
 }
 
 function buildChoiceScreen() {
@@ -605,27 +608,29 @@ function buildChoiceScreen() {
 }
 
 function wireChoiceEvents() {
+    const $c = $('#reliquary-creation-container');
+
     // Close button
-    $('.rel-creation-overlay').on('click', '[data-action="close"]', closeCreationOverlay);
+    $c.on('click', '[data-action="close"]', closeCreationOverlay);
 
     // Preset cards
-    $('.rel-creation-overlay').on('click', '.rel-preset-card', function () {
+    $c.on('click', '.rel-preset-card', function () {
         const presetId = $(this).data('preset-id');
         const preset = PRESET_VOICES.find(p => p.id === presetId);
         if (preset) showPresetPreview(preset);
     });
 
     // Manual editor
-    $('.rel-creation-overlay').on('click', '[data-action="editor"]', showEntityEditor);
+    $c.on('click', '[data-action="editor"]', showEntityEditor);
 }
 
 function showPresetPreview(preset) {
-    const $body = $('.rel-creation-overlay');
+    const $c = $('#reliquary-creation-container');
 
     // Escape voice examples for display
     const voiceHtml = preset.voiceExample.replace(/\n/g, '<br>');
 
-    $body.html(`
+    $c.html(`
         <div class="rel-creation-header">
             <div class="rel-creation-title">◇ PREVIEW</div>
             <button class="rel-creation-close" data-action="close">✕</button>
@@ -684,20 +689,22 @@ function showPresetPreview(preset) {
     `);
 
     // Wire events
-    $body.on('click', '[data-action="bind-preset"]', function () {
+    $c.off('click.preview').on('click.preview', '[data-action="bind-preset"]', function () {
         bindPresetEntity($(this).data('preset-id'));
     });
-    $body.on('click', '[data-action="back-to-choice"]', () => {
-        $body.html(buildChoiceScreen());
+    $c.on('click.preview', '[data-action="back-to-choice"]', () => {
+        $c.html(buildChoiceScreen());
     });
-    $body.on('click', '[data-action="close"]', closeCreationOverlay);
+    $c.on('click.preview', '[data-action="close"]', closeCreationOverlay);
 
     // Scroll to top
-    $body.find('.rel-creation-body').scrollTop(0);
+    $c.scrollTop(0);
+    $('#reliquary-panel').scrollTop(0);
+    $('#reliquary-panel').closest('.scrollableInner, .drawer-content, [class*="scroll"]').scrollTop(0);
 }
 
 function showEntityEditor(existingData) {
-    const $body = $('.rel-creation-overlay');
+    const $c = $('#reliquary-creation-container');
     const d = existingData || {};
 
     const natureOptions = (ENTITY_NATURES || []).map(n =>
@@ -708,7 +715,7 @@ function showEntityEditor(existingData) {
         `<option value="${m}" ${d.manifestationType === m ? 'selected' : ''}>${m.charAt(0).toUpperCase() + m.slice(1)}</option>`
     ).join('');
 
-    $body.html(`
+    $c.html(`
         <div class="rel-creation-header">
             <div class="rel-creation-title">◇ FORGE ENTITY</div>
             <button class="rel-creation-close" data-action="close">✕</button>
@@ -801,11 +808,16 @@ function showEntityEditor(existingData) {
     `);
 
     // Wire events
-    $body.on('click', '[data-action="bind-custom"]', bindCustomEntity);
-    $body.on('click', '[data-action="back-to-choice"]', () => {
-        $body.html(buildChoiceScreen());
+    $c.off('click.editor').on('click.editor', '[data-action="bind-custom"]', bindCustomEntity);
+    $c.on('click.editor', '[data-action="back-to-choice"]', () => {
+        $c.html(buildChoiceScreen());
     });
-    $body.on('click', '[data-action="close"]', closeCreationOverlay);
+    $c.on('click.editor', '[data-action="close"]', closeCreationOverlay);
+
+    // Scroll to top
+    $c.scrollTop(0);
+    $('#reliquary-panel').scrollTop(0);
+    $('#reliquary-panel').closest('.scrollableInner, .drawer-content, [class*="scroll"]').scrollTop(0);
 }
 
 function bindPresetEntity(presetId) {
