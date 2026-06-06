@@ -144,6 +144,7 @@
     <!-- TAB BAR -->
     <div class="reliquary-tabs">
         <button class="reliquary-tab active" data-tab="entity">ENTITY</button>
+        <button class="reliquary-tab" data-tab="commune">COMMUNE</button>
         <button class="reliquary-tab" data-tab="sidebar">SIDEBAR</button>
         <button class="reliquary-tab" data-tab="triggers">TRIGGERS</button>
         <button class="reliquary-tab" data-tab="library">LIBRARY</button>
@@ -171,6 +172,23 @@
                 <div class="reliquary-section-label">DEVELOPED TASTES</div>
                 <div class="reliquary-tastes" id="reliquary-tastes">
                     <div class="reliquary-empty-subtle">Entity has not formed preferences yet.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMMUNE TAB -->
+        <div class="reliquary-tab-pane" id="reliquary-pane-commune">
+            <div class="reliquary-commune">
+                <div class="reliquary-commune-log" id="reliquary-commune-log">
+                    <div class="reliquary-empty-subtle">The connection is open. Speak, and it will answer.</div>
+                </div>
+                <div class="reliquary-commune-input-row">
+                    <textarea
+                        id="reliquary-commune-input"
+                        class="reliquary-commune-input"
+                        rows="1"
+                        placeholder="Speak to it…"></textarea>
+                    <button id="reliquary-commune-send" class="reliquary-commune-send" title="Send">↟</button>
                 </div>
             </div>
         </div>

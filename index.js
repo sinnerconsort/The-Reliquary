@@ -45,7 +45,7 @@ import {
 import {
     shouldSpeak,
     generateCommentary,
-    runDiagnostic,
+    generateCommune,
 } from './src/entity/engine.js';
 
 // ============================================================
@@ -182,6 +182,21 @@ async function initUI() {
 
     // Wire unbind
     $('#reliquary-btn-unbind').on('click', onUnbindEntity);
+
+    // Wire commune (1-on-1 conversation)
+    $('#reliquary-commune-send').on('click', onSendCommune);
+    $('#reliquary-commune-input').on('keydown', function (e) {
+        // Enter sends; Shift+Enter makes a newline.
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            onSendCommune();
+        }
+    });
+    // Auto-grow the textarea as the host types.
+    $('#reliquary-commune-input').on('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
 
     // Start crystal animation
     startCrystalAnimation();
@@ -363,6 +378,7 @@ function renderPanel() {
     renderEntityTab(state);
     renderTriggersTab(state);
     renderSidebarTab(state);
+    renderCommuneTab(state);
     renderLibraryTab();
     renderSettingsTab();
 }
@@ -485,6 +501,116 @@ function renderSidebarTab(state) {
                 </div>
             `);
         });
+    }
+}
+
+// ============================================================
+// COMMUNE — direct conversation with the entity
+// ============================================================
+
+let isCommuning = false;
+
+function escapeHtml(str) {
+    return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function renderCommuneTab(state) {
+    const $log = $('#reliquary-commune-log');
+    if (!$log.length) return;
+
+    if (!state?.entity) {
+        $log.html('<div class="reliquary-empty-subtle">No entity is bound. Nothing answers.</div>');
+        return;
+    }
+
+    const history = state.directoryHistory || [];
+    if (history.length === 0) {
+        $log.html('<div class="reliquary-empty-subtle">The connection is open. Speak, and it will answer.</div>');
+        return;
+    }
+
+    const name = escapeHtml(state.entity.name || 'It');
+    $log.empty();
+    history.forEach(turn => {
+        if (turn.role === 'assistant') {
+            $log.append(`
+                <div class="reliquary-commune-msg reliquary-commune-msg-entity">
+                    <span class="reliquary-commune-name">${name}</span>${escapeHtml(turn.text)}
+                </div>
+            `);
+        } else {
+            $log.append(`
+                <div class="reliquary-commune-msg reliquary-commune-msg-user">${escapeHtml(turn.text)}</div>
+            `);
+        }
+    });
+
+    scrollCommuneToBottom();
+}
+
+function scrollCommuneToBottom() {
+    const log = document.getElementById('reliquary-commune-log');
+    if (log) log.scrollTop = log.scrollHeight;
+}
+
+async function onSendCommune() {
+    if (isCommuning) return;
+
+    const state = getChatState();
+    if (!state?.entity) {
+        toastr.warning('No entity bound to this chat.', 'The Reliquary');
+        return;
+    }
+
+    const $input = $('#reliquary-commune-input');
+    const text = ($input.val() || '').trim();
+    if (!text) return;
+
+    // Record the host's turn
+    if (!state.directoryHistory) state.directoryHistory = [];
+    state.directoryHistory.push({ role: 'user', text, timestamp: Date.now() });
+    $input.val('');
+    $input[0].style.height = 'auto';
+    saveChatState();
+    renderCommuneTab(state);
+
+    // Show a thinking pip
+    isCommuning = true;
+    $('#reliquary-commune-send').prop('disabled', true);
+    const $log = $('#reliquary-commune-log');
+    $log.append('<div class="reliquary-commune-thinking" id="reliquary-commune-thinking">· · ·</div>');
+    scrollCommuneToBottom();
+
+    const diag = { error: null, silence: false, path: 'unknown', hasService: false, hasProfile: false };
+
+    try {
+        const reply = await generateCommune(state, text, diag);
+
+        if (reply) {
+            state.directoryHistory.push({ role: 'assistant', text: reply, timestamp: Date.now() });
+            // Cap stored history so it doesn't grow forever
+            if (state.directoryHistory.length > 60) {
+                state.directoryHistory = state.directoryHistory.slice(-60);
+            }
+            saveChatState();
+        } else if (diag.error) {
+            const detail = `path: ${diag.path} — service: ${diag.hasService ? 'yes' : 'no'} — profile: ${diag.hasProfile ? 'yes' : 'no'}`;
+            toastr.error(`${diag.error} (${detail})`, 'Reliquary — no reply', { timeOut: 15000 });
+        } else {
+            toastr.info('It stayed silent.', 'The Reliquary', { timeOut: 5000 });
+        }
+    } catch (err) {
+        toastr.error(err?.message || String(err), 'Reliquary — commune failed', { timeOut: 12000 });
+    } finally {
+        isCommuning = false;
+        $('#reliquary-commune-send').prop('disabled', false);
+        $('#reliquary-commune-thinking').remove();
+        renderCommuneTab(state);
     }
 }
 
@@ -1287,7 +1413,14 @@ function registerSlashCommands() {
 
                 toastr.info(`Reaching for ${state.entity.name}…`, 'The Reliquary', { timeOut: 2500 });
 
-                const diag = await runDiagnostic(state);
+                // Build diagnostics locally so this works even if engine.js is the
+                // older version (it just ignores the second arg in that case).
+                const diag = {
+                    ok: false, text: null, silence: false, error: null,
+                    path: 'unknown', hasService: false, hasProfile: false,
+                };
+                const text = await generateCommentary(state, diag);
+                if (text) { diag.ok = true; diag.text = text; }
 
                 if (diag.ok) {
                     state.lastCommentary = diag.text;

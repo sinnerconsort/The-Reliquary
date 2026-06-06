@@ -1425,3 +1425,136 @@
     border-color: rgba(180,80,60,0.6) !important;
     background: rgba(180,80,60,0.08) !important;
 }
+
+/* ============================================================
+   COMMUNE — direct conversation with the entity
+   ============================================================ */
+.reliquary-commune {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.reliquary-commune-log {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 52vh;
+    overflow-y: auto;
+    padding: 4px 2px;
+}
+
+.reliquary-commune-msg {
+    max-width: 85%;
+    padding: 9px 13px;
+    border-radius: 12px;
+    font-family: 'Crimson Text', Georgia, serif;
+    font-size: 15px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    animation: reliquary-commune-fade 0.4s ease-out;
+}
+@keyframes reliquary-commune-fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* What the host says — aligned right, dim */
+.reliquary-commune-msg-user {
+    align-self: flex-end;
+    background: var(--rel-accent-faint);
+    border: 1px solid var(--rel-border);
+    color: var(--rel-text);
+    border-bottom-right-radius: 3px;
+}
+
+/* What the entity says — aligned left, accented */
+.reliquary-commune-msg-entity {
+    align-self: flex-start;
+    background: var(--rel-bg-card);
+    border: 1px solid var(--rel-border-bright);
+    color: var(--rel-text-bright);
+    border-bottom-left-radius: 3px;
+    box-shadow: 0 0 16px var(--rel-accent-glow);
+}
+
+.reliquary-commune-msg-entity .reliquary-commune-name {
+    display: block;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--rel-accent-dim);
+    margin-bottom: 4px;
+}
+
+/* "…" thinking pip while waiting for a reply */
+.reliquary-commune-thinking {
+    align-self: flex-start;
+    color: var(--rel-text-dim);
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    letter-spacing: 3px;
+    padding: 6px 13px;
+    animation: reliquary-commune-pulse 1.4s ease-in-out infinite;
+}
+@keyframes reliquary-commune-pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.9; }
+}
+
+.reliquary-commune-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    border-top: 1px solid var(--rel-border);
+    padding-top: 12px;
+}
+
+.reliquary-commune-input {
+    flex: 1;
+    resize: none;
+    max-height: 120px;
+    padding: 10px 12px;
+    background: var(--rel-bg-card);
+    border: 1px solid var(--rel-border);
+    border-radius: 8px;
+    color: var(--rel-text-bright);
+    font-family: 'Crimson Text', Georgia, serif;
+    font-size: 15px;
+    line-height: 1.4;
+    outline: none;
+    transition: border-color 0.3s;
+}
+.reliquary-commune-input:focus {
+    border-color: var(--rel-accent-dim);
+}
+.reliquary-commune-input::placeholder {
+    color: var(--rel-text-ghost);
+    font-style: italic;
+}
+
+.reliquary-commune-send {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    background: transparent;
+    border: 1px solid var(--rel-border-bright);
+    border-radius: 8px;
+    color: var(--rel-accent);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.reliquary-commune-send:hover {
+    border-color: var(--rel-accent-dim);
+    background: var(--rel-accent-faint);
+    box-shadow: 0 0 14px var(--rel-accent-glow);
+}
+.reliquary-commune-send:disabled {
+    opacity: 0.4;
+    cursor: default;
+    box-shadow: none;
+}
