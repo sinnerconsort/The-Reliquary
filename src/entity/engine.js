@@ -175,66 +175,103 @@ function getEntityName() {
 /**
  * Generate commentary using independent connection or fallback.
  */
-export async function generateCommentary(state) {
-    if (!state?.entity) return null;
+export async function generateCommentary(state, diag = null) {
+    if (!state?.entity) {
+        if (diag) diag.error = 'No entity bound.';
+        return null;
+    }
 
     const systemPrompt = buildSystemPrompt(state.entity, state);
     const userPrompt = buildUserPrompt();
 
     try {
-        const response = await callAI(systemPrompt, userPrompt);
+        const response = await callAI(systemPrompt, userPrompt, diag);
 
         if (!response || response.trim() === '...' || response.trim().length < 3) {
-            // Entity chose silence
+            // Entity chose silence (or got an empty reply)
+            if (diag) diag.silence = true;
             return null;
         }
 
         return cleanResponse(response);
     } catch (err) {
+        if (diag) diag.error = err?.message || String(err);
         console.error(LOG_PREFIX, 'Commentary generation failed:', err);
         return null;
     }
 }
 
 /**
+ * Diagnostic wrapper — forces a generation and reports EXACTLY what happened,
+ * so failures are visible on mobile (no console required).
+ * Returns: { ok, text, silence, error, path, hasService, hasProfile }
+ */
+export async function runDiagnostic(state) {
+    const diag = {
+        ok: false, text: null, silence: false, error: null,
+        path: 'none', hasService: false, hasProfile: false,
+    };
+    if (!state?.entity) {
+        diag.error = 'No entity bound to this chat.';
+        return diag;
+    }
+    const text = await generateCommentary(state, diag);
+    if (text) {
+        diag.ok = true;
+        diag.text = text;
+    }
+    return diag;
+}
+
+/**
  * Call AI — tries ConnectionManagerRequestService first, falls back to generateRaw.
  */
-async function callAI(systemPrompt, userPrompt) {
+async function callAI(systemPrompt, userPrompt, diag = null) {
     const ctx = getContext();
 
-    // Try independent connection first (doesn't interrupt main chat)
-    if (ctx.ConnectionManagerRequestService) {
-        try {
-            const profileId = getActiveProfileId();
-            if (profileId) {
-                const response = await ctx.ConnectionManagerRequestService.sendRequest(
-                    profileId,
-                    [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: userPrompt },
-                    ],
-                    300, // Keep responses short
-                    {
-                        extractData: true,
-                        includePreset: true,
-                        includeInstruct: false,
-                    },
-                    {} // No overrides
-                );
+    const hasService = !!ctx.ConnectionManagerRequestService;
+    const profileId = getActiveProfileId();
+    if (diag) { diag.hasService = hasService; diag.hasProfile = !!profileId; }
 
-                if (response?.content) {
-                    return response.content;
-                }
+    // Try independent connection first (doesn't interrupt main chat)
+    if (hasService && profileId) {
+        try {
+            if (diag) diag.path = 'ConnectionManager';
+            const response = await ctx.ConnectionManagerRequestService.sendRequest(
+                profileId,
+                [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt },
+                ],
+                300, // Keep responses short
+                {
+                    extractData: true,
+                    includePreset: true,
+                    includeInstruct: false,
+                },
+                {} // No overrides
+            );
+
+            if (response?.content) {
+                return response.content;
             }
+            if (diag) diag.error = 'ConnectionManager returned empty content.';
         } catch (err) {
-            console.warn(LOG_PREFIX, 'ConnectionManager failed, trying fallback:', err.message);
+            if (diag) diag.error = 'ConnectionManager: ' + (err?.message || String(err));
+            console.warn(LOG_PREFIX, 'ConnectionManager failed, trying fallback:', err?.message);
         }
     }
 
     // Fallback: generateRaw (uses main connection — less ideal but works)
-    const combinedPrompt = `${systemPrompt}\n\n---\n\n${userPrompt}`;
-    const result = await generateRaw(combinedPrompt, null, false, false, '', 300);
-    return result;
+    try {
+        if (diag) diag.path = diag.path === 'ConnectionManager' ? 'ConnectionManager→generateRaw' : 'generateRaw';
+        const combinedPrompt = `${systemPrompt}\n\n---\n\n${userPrompt}`;
+        const result = await generateRaw(combinedPrompt, null, false, false, '', 300);
+        return result;
+    } catch (err) {
+        if (diag) diag.error = 'generateRaw: ' + (err?.message || String(err));
+        throw err;
+    }
 }
 
 /**
