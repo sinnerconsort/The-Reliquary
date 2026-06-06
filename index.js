@@ -45,6 +45,7 @@ import {
 import {
     shouldSpeak,
     generateCommentary,
+    runDiagnostic,
 } from './src/entity/engine.js';
 
 // ============================================================
@@ -95,6 +96,7 @@ jQuery(async () => {
 
         // 4. Register events
         registerEvents();
+        registerSlashCommands();
 
         // 5. Load per-chat state if chat exists
         const ctx = getContext();
@@ -1261,6 +1263,67 @@ function registerEvents() {
     console.log(LOG_PREFIX, 'Events registered');
 }
 
+// ============================================================
+// SLASH COMMANDS (mobile-friendly diagnostics — no console needed)
+// ============================================================
+
+function registerSlashCommands() {
+    try {
+        const ctx = getContext();
+        if (!ctx?.SlashCommandParser || !ctx?.SlashCommand) {
+            console.warn(LOG_PREFIX, 'SlashCommandParser unavailable — /rel not registered');
+            return;
+        }
+
+        ctx.SlashCommandParser.addCommandObject(ctx.SlashCommand.fromProps({
+            name: 'rel',
+            helpString: 'The Reliquary: force the bound entity to speak. Shows the result — or the real error — on screen.',
+            callback: async () => {
+                const state = getChatState();
+                if (!state?.entity) {
+                    toastr.warning('No entity bound to this chat.', 'The Reliquary');
+                    return '';
+                }
+
+                toastr.info(`Reaching for ${state.entity.name}…`, 'The Reliquary', { timeOut: 2500 });
+
+                const diag = await runDiagnostic(state);
+
+                if (diag.ok) {
+                    state.lastCommentary = diag.text;
+                    state.silentStreak = 0;
+                    if (!state.commentaryLog) state.commentaryLog = [];
+                    state.commentaryLog.push({
+                        text: diag.text,
+                        message: state.totalMessages,
+                        timestamp: Date.now(),
+                    });
+                    if (state.commentaryLog.length > 20) {
+                        state.commentaryLog = state.commentaryLog.slice(-20);
+                    }
+                    saveChatState();
+                    renderPanel();
+                    toastr.success(diag.text, state.entity.name, { timeOut: 12000, extendedTimeOut: 6000 });
+                } else if (diag.error) {
+                    const detail = `path: ${diag.path} — service: ${diag.hasService ? 'yes' : 'no'} — profile: ${diag.hasProfile ? 'yes' : 'no'}`;
+                    toastr.error(`${diag.error} (${detail})`, 'Reliquary — generation failed', { timeOut: 20000, extendedTimeOut: 20000 });
+                } else if (diag.silence) {
+                    toastr.info(`Got a reply, but it was empty or "..." — ${state.entity.name} chose silence. (path: ${diag.path})`, 'The Reliquary', { timeOut: 8000 });
+                } else {
+                    toastr.warning(`No response and no error. Check your Connection Profile. (service: ${diag.hasService ? 'yes' : 'no'} — profile: ${diag.hasProfile ? 'yes' : 'no'})`, 'The Reliquary', { timeOut: 12000 });
+                }
+
+                return '';
+            },
+        }));
+
+        console.log(LOG_PREFIX, '/rel command registered');
+    } catch (err) {
+        console.error(LOG_PREFIX, 'Slash command registration failed:', err);
+        toastr.error('Could not register /rel command — see console.', 'Reliquary');
+    }
+}
+
 function onChatChanged() {
     console.log(LOG_PREFIX, 'Chat changed');
     loadChatState();
@@ -1311,6 +1374,7 @@ async function onMessageReceived() {
             }
         } catch (err) {
             console.error(LOG_PREFIX, 'Commentary error:', err);
+            toastr.error(err?.message || String(err), 'Reliquary — commentary failed', { timeOut: 8000 });
             state.silentStreak = (state.silentStreak || 0) + 1;
         } finally {
             isGenerating = false;
