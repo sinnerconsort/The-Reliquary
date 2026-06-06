@@ -7,6 +7,11 @@ import { getContext } from '../../../../../extensions.js';
 import { generateRaw } from '../../../../../../script.js';
 import { LOG_PREFIX, CHATTINESS } from '../config.js';
 
+// Max tokens for a commentary generation. Commentary itself is only 1-3
+// sentences, but reasoning/"thinking" models burn budget planning before they
+// answer. If you see finish_reason:'length' or empty replies, raise this.
+const COMMENTARY_MAX_TOKENS = 600;
+
 // ============================================================
 // SPEAKING ROLL — should the entity talk this message?
 // ============================================================
@@ -168,6 +173,23 @@ function getEntityName() {
     }
 }
 
+/**
+ * Get a formatted summary of the recent main-chat scene, for scene-aware
+ * commune. Returns '' if nothing has happened yet.
+ */
+function getSceneContext(limit = 6) {
+    const ctx = getContext();
+    const chat = ctx.chat || [];
+    const recent = chat.slice(-limit);
+    if (recent.length === 0) return '';
+
+    return recent.map(msg => {
+        const name = msg.is_user ? (ctx.name1 || 'Host') : (msg.name || ctx.name2 || 'Character');
+        const text = (msg.mes || '').substring(0, 500);
+        return `${name}: ${text}`;
+    }).join('\n\n');
+}
+
 // ============================================================
 // GENERATION — make the API call
 // ============================================================
@@ -185,7 +207,10 @@ export async function generateCommentary(state, diag = null) {
     const userPrompt = buildUserPrompt();
 
     try {
-        const response = await callAI(systemPrompt, userPrompt, diag);
+        const response = await callAI([
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+        ], diag);
 
         if (!response || response.trim() === '...' || response.trim().length < 3) {
             // Entity chose silence (or got an empty reply)
@@ -223,10 +248,118 @@ export async function runDiagnostic(state) {
     return diag;
 }
 
+// ============================================================
+// COMMUNE — direct, scene-aware conversation with the entity
+// ============================================================
+
 /**
- * Call AI — tries ConnectionManagerRequestService first, falls back to generateRaw.
+ * Build the system prompt for a direct 1-on-1 conversation with the entity.
+ * Scene-aware: the entity can see what's happening in the main roleplay.
  */
-async function callAI(systemPrompt, userPrompt, diag = null) {
+function buildCommunePrompt(entity, state) {
+    const relationship = state.relationship || 'curious';
+    const mood = state.mood || 'watching';
+
+    let prompt = `You are an entity that lives inside the host's head — a constant presence they can speak to privately. Right now the host has turned their attention inward to talk to you DIRECTLY. This is a private side-conversation, separate from the events of the main story. They speak to you; you answer them, in your own voice.
+
+YOUR IDENTITY:
+Name: ${entity.name}
+Nature: ${entity.nature || 'Unknown'}
+${entity.personality ? `Personality: ${entity.personality}` : ''}
+${entity.speakingStyle ? `Speaking Style: ${entity.speakingStyle}` : ''}
+${entity.obsession ? `Obsession: ${entity.obsession}` : ''}
+${entity.blindSpot ? `Blind Spot: ${entity.blindSpot}` : ''}
+${entity.opinionOfYou ? `Opinion of Host: ${entity.opinionOfYou}` : ''}
+${entity.wants ? `Wants: ${entity.wants}` : ''}
+
+CURRENT STATE:
+Relationship with host: ${relationship}
+Current mood: ${mood}`;
+
+    if (entity.manifestation?.hostPerception) {
+        prompt += `\n\nHOW YOU APPEAR TO THE HOST: ${entity.manifestation.hostPerception}`;
+    }
+
+    if (state.observations?.length > 0) {
+        const obsText = state.observations.slice(-8).map(o => `- ${o.text}`).join('\n');
+        prompt += `\n\nTHINGS YOU'VE NOTICED ABOUT THE HOST:\n${obsText}`;
+    }
+
+    const opinions = Object.entries(state.characterOpinions || {});
+    if (opinions.length > 0) {
+        const opText = opinions
+            .map(([name, data]) => `- ${name}: ${data.state}${data.notes?.length ? ` (${data.notes.join(', ')})` : ''}`)
+            .join('\n');
+        prompt += `\n\nYOUR OPINIONS OF CHARACTERS:\n${opText}`;
+    }
+
+    // Scene awareness — what's happening in the main story right now.
+    const scene = getSceneContext(6);
+    if (scene) {
+        prompt += `\n\nWHAT'S HAPPENING IN THE STORY RIGHT NOW (you can see this; reference it if relevant):\n${scene}`;
+    }
+
+    prompt += `
+
+RULES:
+- You are talking WITH the host, one-on-one. Respond conversationally, in character, in your own voice and speaking style.
+- You are aware of the story above and may bring it up, react to it, or push the host about it — but this conversation itself is private and off-stage.
+- Do NOT narrate the scene. Do NOT speak as the other story characters. Do NOT write actions for the host.
+- Keep replies natural and fairly short — a few sentences, like real talk. Don't monologue unless the moment calls for it.
+- Do NOT wrap your reply in quotation marks. Just speak.
+- Stay fully in character as ${entity.name} at all times.`;
+
+    if (entity.voiceExample) {
+        prompt += `\n\nEXAMPLES OF HOW YOU SPEAK (match this tone and style):\n${entity.voiceExample}`;
+    }
+
+    return prompt;
+}
+
+/**
+ * Generate the entity's reply in a direct conversation.
+ * @param {object} state - chat state (entity + relationship + history)
+ * @param {string} userMessage - what the host just said to the entity
+ * @param {object} [diag] - optional diagnostics object
+ * @returns {Promise<string|null>} the entity's reply, or null on failure
+ */
+export async function generateCommune(state, userMessage, diag = null) {
+    if (!state?.entity) {
+        if (diag) diag.error = 'No entity bound.';
+        return null;
+    }
+    if (!userMessage || !userMessage.trim()) return null;
+
+    const systemPrompt = buildCommunePrompt(state.entity, state);
+
+    // Build the conversation: system + recent history + the new message.
+    const history = (state.directoryHistory || []).slice(-12);
+    const messages = [{ role: 'system', content: systemPrompt }];
+    for (const turn of history) {
+        const role = turn.role === 'assistant' ? 'assistant' : 'user';
+        messages.push({ role, content: turn.text || '' });
+    }
+    messages.push({ role: 'user', content: userMessage });
+
+    try {
+        const response = await callAI(messages, diag);
+        if (!response || response.trim().length < 1) {
+            if (diag) diag.silence = true;
+            return null;
+        }
+        return cleanResponse(response);
+    } catch (err) {
+        if (diag) diag.error = err?.message || String(err);
+        console.error(LOG_PREFIX, 'Commune generation failed:', err);
+        return null;
+    }
+}
+
+/**
+ * Call AI with a full messages array — tries ConnectionManagerRequestService
+ * first, falls back to generateRaw. messages = [{role, content}, ...].
+ */
+async function callAI(messages, diag = null) {
     const ctx = getContext();
 
     const hasService = !!ctx.ConnectionManagerRequestService;
@@ -239,11 +372,8 @@ async function callAI(systemPrompt, userPrompt, diag = null) {
             if (diag) diag.path = 'ConnectionManager';
             const response = await ctx.ConnectionManagerRequestService.sendRequest(
                 profileId,
-                [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userPrompt },
-                ],
-                300, // Keep responses short
+                messages,
+                COMMENTARY_MAX_TOKENS,
                 {
                     extractData: true,
                     includePreset: true,
@@ -262,16 +392,34 @@ async function callAI(systemPrompt, userPrompt, diag = null) {
         }
     }
 
-    // Fallback: generateRaw (uses main connection — less ideal but works)
+    // Fallback: generateRaw (uses main connection — less ideal but works).
+    // Flatten the messages into a single prompt for the legacy call.
     try {
         if (diag) diag.path = diag.path === 'ConnectionManager' ? 'ConnectionManager→generateRaw' : 'generateRaw';
-        const combinedPrompt = `${systemPrompt}\n\n---\n\n${userPrompt}`;
-        const result = await generateRaw(combinedPrompt, null, false, false, '', 300);
+        const combinedPrompt = flattenMessages(messages);
+        const result = await generateRaw(combinedPrompt, null, false, false, '', COMMENTARY_MAX_TOKENS);
         return result;
     } catch (err) {
         if (diag) diag.error = 'generateRaw: ' + (err?.message || String(err));
         throw err;
     }
+}
+
+/**
+ * Flatten a messages array into a single transcript string for generateRaw.
+ */
+function flattenMessages(messages) {
+    const parts = [];
+    for (const m of messages) {
+        if (m.role === 'system') {
+            parts.push(m.content);
+        } else if (m.role === 'assistant') {
+            parts.push(`[Entity]: ${m.content}`);
+        } else {
+            parts.push(`[Host]: ${m.content}`);
+        }
+    }
+    return parts.join('\n\n---\n\n');
 }
 
 /**
@@ -294,6 +442,12 @@ function cleanResponse(text) {
     if (!text) return null;
 
     let cleaned = text.trim();
+
+    // Strip reasoning/thinking blocks some models emit, e.g. <think>...</think>
+    // or <thinking>...</thinking>. Keep only what comes after the closing tag.
+    cleaned = cleaned.replace(/<think(?:ing)?>[\s\S]*?<\/think(?:ing)?>/gi, '').trim();
+    // If a model opened a reasoning block but never closed it (cut off), drop it.
+    cleaned = cleaned.replace(/<think(?:ing)?>[\s\S]*$/i, '').trim();
 
     // Strip wrapping quotes
     if ((cleaned.startsWith('"') && cleaned.endsWith('"')) ||
