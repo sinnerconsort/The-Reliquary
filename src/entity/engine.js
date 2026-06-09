@@ -19,8 +19,11 @@ const COMMENTARY_MAX_TOKENS = 600;
 /**
  * Determine if the entity speaks this round.
  * Returns true if entity should generate commentary.
+ * @param {object} state - per-chat state
+ * @param {object} [stir] - agitation summary from updateAgitation() (optional;
+ *                          older callers that omit it get the legacy behavior)
  */
-export function shouldSpeak(state) {
+export function shouldSpeak(state, stir = null) {
     if (!state?.entity) return false;
 
     const chattiness = state.entity.chattiness || 3;
@@ -30,15 +33,28 @@ export function shouldSpeak(state) {
     // How many messages since last commentary?
     const silent = state.silentStreak || 0;
 
+    // ── RELEVANCE OVERRIDE ──
+    // "If the current scene matches triggers → guaranteed speak."
+    // A strong hit, or any clear hit on a high-sensitivity trigger, bypasses
+    // the chattiness gap entirely. Even a near-silent entity speaks when its
+    // sensitivity-5 trigger fires. That's the whole point of triggers.
+    let relevanceBoost = 0;
+    if (stir?.matched?.length) {
+        const strongest = stir.matched.reduce((a, b) => (b.score > a.score ? b : a));
+        const highSens = stir.matched.some(m => (m.sensitivity || 0) >= 4 && m.score >= 0.45);
+        if (strongest.score >= 0.8 || highSens) return true;
+        if (strongest.score >= 0.45) relevanceBoost = 0.35;
+    }
+
     // Guaranteed speak if silent too long
     if (silent >= maxGap) return true;
 
-    // Never speak if below minimum gap
-    if (silent < minGap) return false;
+    // Never speak if below minimum gap — unless something relevant stirred
+    if (silent < minGap && relevanceBoost === 0) return false;
 
     // Probability ramps up between min and max
     const range = maxGap - minGap;
-    const progress = (silent - minGap) / Math.max(range, 1);
+    const progress = Math.max(0, Math.min(1, (silent - minGap) / Math.max(range, 1)));
     const baseChance = 0.3 + (progress * 0.6); // 30% at min, 90% at max
 
     // Mood modifiers
@@ -53,7 +69,8 @@ export function shouldSpeak(state) {
     // Agitation modifier — more agitated = more talkative
     const agitationMod = (state.agitation || 0) / 500; // 0-0.2
 
-    const finalChance = Math.max(0.05, Math.min(0.95, baseChance + moodMod + agitationMod));
+    const finalChance = Math.max(0.05, Math.min(0.95,
+        baseChance + moodMod + agitationMod + relevanceBoost));
 
     return Math.random() < finalChance;
 }
@@ -65,7 +82,7 @@ export function shouldSpeak(state) {
 /**
  * Build the system prompt for entity commentary.
  */
-function buildSystemPrompt(entity, state) {
+function buildSystemPrompt(entity, state, stir = null) {
     const relationship = state.relationship || 'curious';
     const mood = state.mood || 'watching';
     const agitation = state.agitation || 0;
@@ -90,6 +107,20 @@ Agitation level: ${agitation}/100${agitation > 60 ? ' (HIGH — you are restless
     // Add manifestation context
     if (entity.manifestation?.hostPerception) {
         prompt += `\n\nHOW YOU APPEAR: ${entity.manifestation.hostPerception}`;
+    }
+
+    // What just stirred the entity (from classifier + agitation engine)
+    if (stir?.matched?.length) {
+        const stirText = stir.matched
+            .filter(m => m.id !== 'random')
+            .map(m => `${m.label}${m.score >= 0.8 ? ' (strongly)' : ''}`)
+            .join(', ');
+        if (stirText) {
+            const direction = stir.delta > 0
+                ? 'Your agitation just ROSE because of it.'
+                : '';
+            prompt += `\n\nWHAT JUST STIRRED YOU: The last message contained ${stirText}. ${direction} React to THIS — it's what caught your attention. Filter it through your nature and obsession.`;
+        }
     }
 
     // Add observations if any
@@ -197,13 +228,13 @@ function getSceneContext(limit = 6) {
 /**
  * Generate commentary using independent connection or fallback.
  */
-export async function generateCommentary(state, diag = null) {
+export async function generateCommentary(state, diag = null, stir = null) {
     if (!state?.entity) {
         if (diag) diag.error = 'No entity bound.';
         return null;
     }
 
-    const systemPrompt = buildSystemPrompt(state.entity, state);
+    const systemPrompt = buildSystemPrompt(state.entity, state, stir);
     const userPrompt = buildUserPrompt();
 
     try {
