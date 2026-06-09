@@ -48,6 +48,9 @@ import {
     generateCommune,
 } from './src/entity/engine.js';
 
+import { classifyMessage } from './src/entity/classifier.js';
+import { updateAgitation, describeStir, agitationWord } from './src/entity/agitation.js';
+
 // ============================================================
 // RUNTIME STATE (not persisted)
 // ============================================================
@@ -1451,6 +1454,47 @@ function registerSlashCommands() {
         }));
 
         console.log(LOG_PREFIX, '/rel command registered');
+
+        // /relstate — show the entity's internal state on screen (mobile diagnostic)
+        ctx.SlashCommandParser.addCommandObject(ctx.SlashCommand.fromProps({
+            name: 'relstate',
+            helpString: 'The Reliquary: show agitation, mood, and what last stirred the entity.',
+            callback: async () => {
+                const state = getChatState();
+                if (!state?.entity) {
+                    toastr.warning('No entity bound to this chat.', 'The Reliquary');
+                    return '';
+                }
+
+                const ag = Math.round(state.agitation || 0);
+                const lines = [
+                    `Agitation: ${ag}/100 — ${agitationWord(ag).toUpperCase()}`,
+                    `Mood: ${state.mood || 'watching'} · Relationship: ${state.relationship || 'curious'}`,
+                ];
+
+                const ls = state.lastStir;
+                if (ls?.matched?.length) {
+                    const trigs = ls.matched.map(m => `${m.label} ${Math.round(m.score * 100)}%`).join(', ');
+                    lines.push(`Last stir (msg #${ls.atMessage}): ${trigs} → ${ls.delta > 0 ? '+' : ''}${ls.delta}`);
+                } else {
+                    lines.push('Nothing has stirred it recently.');
+                }
+
+                // Recent agitation movement (last 5 log entries)
+                const log = (state.agitationLog || []).slice(-5);
+                if (log.length) {
+                    const trail = log.map(e => `${e.d > 0 ? '+' : ''}${e.d}`).join(' → ');
+                    lines.push(`Recent movement: ${trail}`);
+                }
+
+                toastr.info(lines.join('<br>'), `${state.entity.name} — state`, {
+                    timeOut: 15000, extendedTimeOut: 10000, escapeHtml: false,
+                });
+                return '';
+            },
+        }));
+
+        console.log(LOG_PREFIX, '/relstate command registered');
     } catch (err) {
         console.error(LOG_PREFIX, 'Slash command registration failed:', err);
         toastr.error('Could not register /rel command — see console.', 'Reliquary');
@@ -1476,13 +1520,40 @@ async function onMessageReceived() {
     state.messagesSinceLastObservation++;
     state.messagesSinceLastHijack++;
 
+    // ── CLASSIFY + AGITATION (Phase 3A/3B) ──
+    // Read the incoming message, score it against triggers, move the needle.
+    let stir = null;
+    try {
+        const ctx = getContext();
+        const lastMsg = ctx?.chat?.[ctx.chat.length - 1];
+        if (lastMsg?.mes) {
+            const classification = classifyMessage(lastMsg.mes, getSettings());
+            stir = updateAgitation(state, classification, getSettings(), { source: 'ai' });
+
+            // Keep a tiny summary for diagnostics (/relstate) — not the full object
+            state.lastStir = {
+                matched: stir.matched.map(m => ({ id: m.id, label: m.label, score: m.score })),
+                delta: stir.delta,
+                value: stir.value,
+                atMessage: state.totalMessages,
+            };
+
+            if (stir.stirred) {
+                console.log(LOG_PREFIX, `Stirred: ${describeStir(stir)} → agitation ${stir.value} (${stir.delta > 0 ? '+' : ''}${stir.delta})`);
+            }
+        }
+    } catch (err) {
+        // Never let analysis break the chat flow
+        console.warn(LOG_PREFIX, 'Classification error (ignored):', err);
+    }
+
     // ── COMMENTARY ENGINE ──
-    // Check if entity should speak this round
-    if (!isGenerating && shouldSpeak(state)) {
+    // Check if entity should speak this round (trigger hits can force it)
+    if (!isGenerating && shouldSpeak(state, stir)) {
         isGenerating = true;
 
         try {
-            const commentary = await generateCommentary(state);
+            const commentary = await generateCommentary(state, null, stir);
 
             if (commentary) {
                 // Store commentary
@@ -1528,12 +1599,27 @@ async function onMessageReceived() {
 function onMessageSent() {
     if (!isEnabled()) return;
 
-    // TODO Phase 6: Intercept for hijack check
-
     const state = getChatState();
-    if (state) {
-        saveChatState();
+    if (!state || !state.entity) return;
+
+    // ── CLASSIFY the host's own message ──
+    // The entity reacts to what YOU do, not just what the world does.
+    // Half-rate decay here so running both hooks doesn't drain double.
+    try {
+        const ctx = getContext();
+        const lastMsg = ctx?.chat?.[ctx.chat.length - 1];
+        if (lastMsg?.mes && lastMsg.is_user) {
+            const classification = classifyMessage(lastMsg.mes, getSettings());
+            const stir = updateAgitation(state, classification, getSettings(), { source: 'user' });
+            if (stir.stirred) {
+                console.log(LOG_PREFIX, `Host stirred the entity: ${describeStir(stir)} → ${stir.value}`);
+            }
+        }
+    } catch (err) {
+        console.warn(LOG_PREFIX, 'Sent-message classification error (ignored):', err);
     }
+
+    saveChatState();
 }
 
 // ============================================================
@@ -1571,5 +1657,5 @@ window.Reliquary = {
             console.log(LOG_PREFIX, 'Entity chose silence');
         }
     },
-    version: '0.2.0',
+    version: '0.3.0', // 3A classifier + 3B agitation
 };
