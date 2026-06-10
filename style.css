@@ -1558,3 +1558,51 @@
     cursor: default;
     box-shadow: none;
 }
+
+/* ============================================================
+   BLEED SYSTEM (Phase 7)
+   The opposing theme leaking through as agitation rises.
+   Veil element is created/positioned by src/ui/bleed.js.
+   ============================================================ */
+
+.reliquary-bleed-veil {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1001;            /* above the panel (1000), below ST popups */
+    opacity: 0;
+    transition: opacity 1.4s ease;
+    mix-blend-mode: screen;   /* invading color glows over both dark themes */
+    animation: rel-veil-pulse 6s ease-in-out infinite;
+}
+
+@keyframes rel-veil-pulse {
+    0%, 100% { filter: brightness(0.8); }
+    50%      { filter: brightness(1.7); }
+}
+
+/* Past 75% bleed: the patches crawl */
+.reliquary-bleed-veil.rel-veil-breaking {
+    animation: rel-veil-crawl 2.2s ease-in-out infinite;
+}
+
+@keyframes rel-veil-crawl {
+    0%, 100% { filter: brightness(0.9); transform: translate(0, 0) scale(1); }
+    33%      { filter: brightness(1.8); transform: translate(4px, -3px) scale(1.02); }
+    66%      { filter: brightness(1.3); transform: translate(-3px, 2px) scale(1.01); }
+}
+
+/* Creed flicker — the motto stutters into the other house's words */
+.rel-creed {
+    transition: color 0.4s ease, text-shadow 0.4s ease;
+}
+
+.rel-creed.rel-creed-flicker {
+    animation: rel-creed-glitch 0.3s steps(3);
+}
+
+@keyframes rel-creed-glitch {
+    0%   { transform: translateX(0);    opacity: 1;   }
+    30%  { transform: translateX(-1px); opacity: 0.55; }
+    60%  { transform: translateX(1px);  opacity: 0.85; }
+    100% { transform: translateX(0);    opacity: 1;   }
+}

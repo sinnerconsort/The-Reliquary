@@ -50,6 +50,7 @@ import {
 
 import { classifyMessage } from './src/entity/classifier.js';
 import { updateAgitation, describeStir, agitationWord } from './src/entity/agitation.js';
+import { tickBleed, getCurrentBleed, destroyBleed } from './src/ui/bleed.js';
 
 // ============================================================
 // RUNTIME STATE (not persisted)
@@ -215,6 +216,7 @@ function destroyUI() {
         cancelAnimationFrame(crystalAnimFrame);
         crystalAnimFrame = null;
     }
+    destroyBleed();
     $('#reliquary-panel').remove();
     $('.reliquary-fab').remove();
     panelVisible = false;
@@ -1257,6 +1259,15 @@ function startCrystalAnimation() {
         lastTime = now;
         crystalAnimFrame = requestAnimationFrame(animate);
 
+        // Bleed + FAB tick — runs even while the panel is CLOSED, throttled
+        // to ~400ms. The FAB bleeding toward the other palette is the early
+        // warning you get without opening anything.
+        if (!animate._lastTick || now - animate._lastTick > 400) {
+            animate._lastTick = now;
+            tickBleed(getChatState(), getSettings(), 400);
+            updateFABState();
+        }
+
         // Only animate if panel is visible
         if (!panelVisible) return;
 
@@ -1273,6 +1284,12 @@ function startCrystalAnimation() {
             Math.round(lerp(a[2], b[2], t)),
         ];
 
+        // Bleed: the opposing palette invades the crystal itself
+        const OTHER = THEMES[settings.theme === 'veridian' ? 'feathered' : 'veridian'] || THEMES.veridian;
+        const bleedAmt = getCurrentBleed();
+        const accentNow = bleedAmt > 0.01 ? lerpC(T.accent, OTHER.accent, bleedAmt * 0.7) : T.accent;
+        const accentBrightNow = bleedAmt > 0.01 ? lerpC(T.accentBright, OTHER.accentBright, bleedAmt * 0.7) : T.accentBright;
+
         // Facet shading
         document.querySelectorAll('.reliquary-facet').forEach(el => {
             const shade = el.dataset.shade;
@@ -1283,16 +1300,16 @@ function startCrystalAnimation() {
             else if (shade === 'mid') { fillAlpha = C.mid; darken = 0.84; }
             else { fillAlpha = C.dark; darken = 1 - C.darkOverlay * 4; }
 
-            const r = Math.round(T.accent[0] * darken);
-            const g = Math.round(T.accent[1] * darken);
-            const b_ = Math.round(T.accent[2] * darken);
+            const r = Math.round(accentNow[0] * darken);
+            const g = Math.round(accentNow[1] * darken);
+            const b_ = Math.round(accentNow[2] * darken);
             el.setAttribute('fill', `rgba(${r},${g},${b_},${fillAlpha})`);
-            el.setAttribute('stroke', rgb(T.accent, C.edgeAlpha));
+            el.setAttribute('stroke', rgb(accentNow, C.edgeAlpha));
         });
 
         // Veins
         document.querySelectorAll('.reliquary-vein').forEach(v => {
-            v.setAttribute('stroke', rgb(T.accent, T.crystal.veinAlpha));
+            v.setAttribute('stroke', rgb(accentNow, T.crystal.veinAlpha));
         });
 
         // Fill (bleed color rising)
@@ -1364,17 +1381,11 @@ function startCrystalAnimation() {
         document.querySelectorAll('.reliquary-pris-3').forEach(el =>
             el.setAttribute('stop-color', `hsla(${160 + Math.sin(hueShift * 1.1) * 20}, 35%, 65%, 0.04)`));
 
-        // Runes — bright host color
+        // Runes — bright host color (bleeds toward the other palette)
         const runeAlpha = 0.6 + agPct * 0.35;
         document.querySelectorAll('.reliquary-rune').forEach(r => {
-            r.setAttribute('fill', rgb(T.accentBright, runeAlpha));
+            r.setAttribute('fill', rgb(accentBrightNow, runeAlpha));
         });
-
-        // Update FAB crystal colors (throttled — every ~500ms)
-        if (!animate._lastFab || now - animate._lastFab > 500) {
-            animate._lastFab = now;
-            updateFABState();
-        }
     }
 
     crystalAnimFrame = requestAnimationFrame(animate);
@@ -1657,5 +1668,5 @@ window.Reliquary = {
             console.log(LOG_PREFIX, 'Entity chose silence');
         }
     },
-    version: '0.3.0', // 3A classifier + 3B agitation
+    version: '0.4.0', // 3A classifier + 3B agitation + Phase 7 bleed
 };
