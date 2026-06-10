@@ -330,6 +330,12 @@ Current mood: ${mood}`;
         prompt += `\n\nWHAT'S HAPPENING IN THE STORY RIGHT NOW (you can see this; reference it if relevant):\n${scene}`;
     }
 
+    // Active summons — the entity dragged the host here and wants answers.
+    if (state.activeSummons) {
+        const why = state.activeSummons.reason ? ` What stirred you: ${state.activeSummons.reason}.` : '';
+        prompt += `\n\nIMPORTANT — YOU SUMMONED THE HOST: Your agitation crossed what you could contain and you dragged the host's attention inward to confront them.${why} You are NOT making small talk. Stay in that confrontation — press them, demand acknowledgment, hold the line of what you want — until they actually answer for it.`;
+    }
+
     prompt += `
 
 RULES:
@@ -382,6 +388,57 @@ export async function generateCommune(state, userMessage, diag = null) {
     } catch (err) {
         if (diag) diag.error = err?.message || String(err);
         console.error(LOG_PREFIX, 'Commune generation failed:', err);
+        return null;
+    }
+}
+
+// ============================================================
+// SUMMONS — the entity demands an audience (Phase: Summons)
+// ============================================================
+
+const SELF_REPORT_NOTE = `Then, on a final new line, write exactly this (filling in the values): [MOOD: one or two words] [BOND: exactly one of: bonded, protective, curious, resentful, hostile, possessive, devoted, indifferent, amused, grieving]`;
+
+/**
+ * Generate one turn of a summons confrontation.
+ * @param {object} state - chat state
+ * @param {string} kind - 'opener' | 'soothe' | 'feed' | 'defy'
+ * @param {string} [reason] - human-readable description of what stirred it
+ * @param {object} [diag] - optional diagnostics object
+ */
+export async function generateSummonsTurn(state, kind, reason = '', diag = null) {
+    if (!state?.entity) {
+        if (diag) diag.error = 'No entity bound.';
+        return null;
+    }
+
+    const ag = Math.round(state.agitation || 0);
+    const why = reason ? ` What stirred you: ${reason}.` : '';
+
+    const DIRECTIVES = {
+        opener: `[DIRECTION: Your agitation has reached ${ag}/100 — past what you can contain.${why} You have SUMMONED the host: you seized their attention and dragged it inward because you refuse to be ignored any longer. Speak FIRST. Confront them about what stirred you. Demand, accuse, plead, or seethe — whatever fits your nature. Make it clear what you want from them. 2-4 sentences, fully in character. Do not narrate; just speak.]`,
+        soothe: `[DIRECTION: The host chose to SOOTHE you — they are steadying you, calming you, talking you down. It works, mostly; the pressure eases whether you want it to or not. React in character: soften, deflect, grumble, or be quietly grateful — whatever fits your nature. 1-3 sentences. ${SELF_REPORT_NOTE}]`,
+        feed:   `[DIRECTION: The host chose to FEED you — they are giving you what you wanted: acknowledgment, indulgence, permission. The hunger is answered and the pressure drains. React in character: satisfaction, triumph, relief, or something darker. The host met you on YOUR terms, and that changes things between you. 1-3 sentences. ${SELF_REPORT_NOTE}]`,
+        defy:   `[DIRECTION: The host chose to DEFY you — flat refusal. They will not give you what you want and they told you to stand down. You withdraw, for now, but you do not forget. React in character: cold, wounded, mocking — or quietly respectful of the spine they just showed, whatever fits your nature. 1-3 sentences. ${SELF_REPORT_NOTE}]`,
+    };
+
+    const systemPrompt = buildCommunePrompt(state.entity, state);
+    const history = (state.directoryHistory || []).slice(-10);
+    const messages = [{ role: 'system', content: systemPrompt }];
+    for (const turn of history) {
+        messages.push({ role: turn.role === 'assistant' ? 'assistant' : 'user', content: turn.text || '' });
+    }
+    messages.push({ role: 'user', content: DIRECTIVES[kind] || DIRECTIVES.opener });
+
+    try {
+        const response = await callAI(messages, diag);
+        if (!response || response.trim().length < 1) {
+            if (diag) diag.silence = true;
+            return null;
+        }
+        return cleanResponse(response);
+    } catch (err) {
+        if (diag) diag.error = err?.message || String(err);
+        console.error(LOG_PREFIX, 'Summons generation failed:', err);
         return null;
     }
 }
