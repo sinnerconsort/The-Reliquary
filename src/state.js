@@ -80,6 +80,11 @@ const DEFAULT_CHAT_STATE = {
     // Hijack State
     activeHijack: null,
 
+    // Summons (the entity demands an audience)
+    activeSummons: null,
+    lastSummonsAt: null,
+    summonsLog: [],
+
     // History
     directoryHistory: [],
     hijackLog: [],
