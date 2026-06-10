@@ -51,6 +51,7 @@ import {
 import { classifyMessage } from './src/entity/classifier.js';
 import { updateAgitation, describeStir, agitationWord } from './src/entity/agitation.js';
 import { tickBleed, getCurrentBleed, destroyBleed } from './src/ui/bleed.js';
+import { canSummon, triggerSummons, resolveSummons, SUMMONS_CHOICES } from './src/social/summons.js';
 
 // ============================================================
 // RUNTIME STATE (not persisted)
@@ -314,8 +315,10 @@ function updateFABState() {
     const state = getChatState();
     const ag = state?.agitation || 0;
 
-    $fab.removeClass('fab-agitated fab-danger');
-    if (ag >= 75) {
+    $fab.removeClass('fab-agitated fab-danger fab-summons');
+    if (state?.activeSummons) {
+        $fab.addClass('fab-summons');
+    } else if (ag >= 75) {
         $fab.addClass('fab-danger');
     } else if (ag >= 35) {
         $fab.addClass('fab-agitated');
@@ -327,6 +330,9 @@ function togglePanel() {
     $('#reliquary-panel').toggle(panelVisible);
 
     if (panelVisible) {
+        // An active summons drags you straight to the confrontation
+        const state = getChatState();
+        if (state?.activeSummons) switchTab('commune');
         renderPanel();
     }
 }
@@ -528,6 +534,9 @@ function renderCommuneTab(state) {
     const $log = $('#reliquary-commune-log');
     if (!$log.length) return;
 
+    // Clear any stale choice bar; renderSummonsBar re-adds it if needed
+    $('#reliquary-summons-bar').remove();
+
     if (!state?.entity) {
         $log.html('<div class="reliquary-empty-subtle">No entity is bound. Nothing answers.</div>');
         return;
@@ -543,8 +552,9 @@ function renderCommuneTab(state) {
     $log.empty();
     history.forEach(turn => {
         if (turn.role === 'assistant') {
+            const summonsClass = turn.summons ? ' reliquary-commune-msg-summons' : '';
             $log.append(`
-                <div class="reliquary-commune-msg reliquary-commune-msg-entity">
+                <div class="reliquary-commune-msg reliquary-commune-msg-entity${summonsClass}">
                     <span class="reliquary-commune-name">${name}</span>${escapeHtml(turn.text)}
                 </div>
             `);
@@ -555,12 +565,99 @@ function renderCommuneTab(state) {
         }
     });
 
+    renderSummonsBar(state);
     scrollCommuneToBottom();
 }
 
 function scrollCommuneToBottom() {
     const log = document.getElementById('reliquary-commune-log');
     if (log) log.scrollTop = log.scrollHeight;
+}
+
+// ============================================================
+// SUMMONS UI — the entity demands an audience
+// ============================================================
+
+function announceSummons(state) {
+    const name = state?.entity?.name || 'It';
+    toastr.warning(
+        `${name} demands an audience. Open the Reliquary.`,
+        'THE SEAL STRAINS',
+        {
+            timeOut: 15000,
+            extendedTimeOut: 10000,
+            onclick: () => {
+                if (!panelVisible) togglePanel();
+                switchTab('commune');
+                renderPanel();
+            },
+        },
+    );
+}
+
+function renderSummonsBar(state) {
+    $('#reliquary-summons-bar').remove();
+    if (!state?.activeSummons) return;
+
+    const $inputRow = $('#reliquary-pane-commune .reliquary-commune-input-row');
+    if (!$inputRow.length) return;
+
+    const btns = Object.entries(SUMMONS_CHOICES).map(([id, c]) => `
+        <button class="reliquary-summons-btn${id === 'defy' ? ' rel-summons-defy' : ''}" data-choice="${id}">
+            ${c.label}<span>${c.hint}</span>
+        </button>
+    `).join('');
+
+    const $bar = $(`
+        <div id="reliquary-summons-bar" class="reliquary-summons-bar">
+            <div class="reliquary-summons-title">✦ IT DEMANDS AN ANSWER ✦</div>
+            <div class="reliquary-summons-choices">${btns}</div>
+        </div>
+    `);
+
+    $bar.insertBefore($inputRow);
+    $bar.find('.reliquary-summons-btn').on('click', function () {
+        onSummonsChoice($(this).data('choice'));
+    });
+}
+
+async function onSummonsChoice(choiceId) {
+    if (isCommuning) return;
+
+    const state = getChatState();
+    if (!state?.activeSummons) return;
+
+    isCommuning = true;
+    $('#reliquary-summons-bar .reliquary-summons-btn').prop('disabled', true);
+    $('#reliquary-commune-send').prop('disabled', true);
+
+    // Show the host's answer + thinking pip immediately
+    const choice = SUMMONS_CHOICES[choiceId];
+    const $log = $('#reliquary-commune-log');
+    if (choice && $log.length) {
+        $log.append(`<div class="reliquary-commune-msg reliquary-commune-msg-user">${escapeHtml(choice.hostLine)}</div>`);
+        $log.append('<div class="reliquary-commune-thinking" id="reliquary-commune-thinking">· · ·</div>');
+        scrollCommuneToBottom();
+    }
+
+    try {
+        const result = await resolveSummons(state, choiceId);
+        if (result) {
+            toastr.info(
+                `Mood: ${result.mood} · Bond: ${result.bond} · Agitation: ${Math.round(state.agitation)}`,
+                'The seal settles',
+                { timeOut: 7000 },
+            );
+        }
+    } catch (err) {
+        toastr.error(err?.message || String(err), 'Reliquary — summons resolution failed', { timeOut: 12000 });
+    } finally {
+        isCommuning = false;
+        $('#reliquary-commune-send').prop('disabled', false);
+        $('#reliquary-commune-thinking').remove();
+        updateFABState();
+        renderPanel();
+    }
 }
 
 async function onSendCommune() {
@@ -1114,6 +1211,7 @@ function onUnbindEntity() {
     state.observations = [];
     state.characterOpinions = {};
     state.developedTastes = [];
+    state.activeSummons = null;
     saveChatState();
     renderPanel();
     toastr.success(`${name} unbound.`, 'The Reliquary');
@@ -1483,6 +1581,10 @@ function registerSlashCommands() {
                     `Mood: ${state.mood || 'watching'} · Relationship: ${state.relationship || 'curious'}`,
                 ];
 
+                if (state.activeSummons) {
+                    lines.push(`⚠ SUMMONS PENDING — it is waiting for you in the COMMUNE tab.`);
+                }
+
                 const ls = state.lastStir;
                 if (ls?.matched?.length) {
                     const trigs = ls.matched.map(m => `${m.label} ${Math.round(m.score * 100)}%`).join(', ');
@@ -1506,6 +1608,45 @@ function registerSlashCommands() {
         }));
 
         console.log(LOG_PREFIX, '/relstate command registered');
+
+        // /relsummon — force a summons for testing (no waiting for organic 75+)
+        ctx.SlashCommandParser.addCommandObject(ctx.SlashCommand.fromProps({
+            name: 'relsummon',
+            helpString: 'The Reliquary: force the entity to summon you (testing). Raises agitation to the breaking point and triggers the confrontation.',
+            callback: async () => {
+                const state = getChatState();
+                if (!state?.entity) {
+                    toastr.warning('No entity bound to this chat.', 'The Reliquary');
+                    return '';
+                }
+                if (state.activeSummons) {
+                    toastr.info('A summons is already active — answer it in the COMMUNE tab.', 'The Reliquary');
+                    return '';
+                }
+
+                state.agitation = Math.max(state.agitation || 0, 80);
+                state.lastSummonsAt = null; // bypass cooldown for testing
+                saveChatState();
+
+                announceSummons(state);
+                updateFABState();
+
+                try {
+                    const reason = state.lastStir?.matched?.length
+                        ? state.lastStir.matched.map(m => m.label).join(', ')
+                        : 'the manual invocation — you called it up yourself';
+                    await triggerSummons(state, reason);
+                } catch (err) {
+                    toastr.error(err?.message || String(err), 'Reliquary — summons failed', { timeOut: 12000 });
+                }
+
+                saveChatState();
+                renderPanel();
+                return '';
+            },
+        }));
+
+        console.log(LOG_PREFIX, '/relsummon command registered');
     } catch (err) {
         console.error(LOG_PREFIX, 'Slash command registration failed:', err);
         toastr.error('Could not register /rel command — see console.', 'Reliquary');
@@ -1556,6 +1697,25 @@ async function onMessageReceived() {
     } catch (err) {
         // Never let analysis break the chat flow
         console.warn(LOG_PREFIX, 'Classification error (ignored):', err);
+    }
+
+    // ── SUMMONS CHECK (the entity demands an audience) ──
+    // If pressure crossed the breaking point, the entity stops waiting for
+    // you to open the panel. Commentary is skipped — its attention is HERE.
+    if (canSummon(state, getSettings())) {
+        announceSummons(state);
+        updateFABState();
+
+        try {
+            await triggerSummons(state, stir ? describeStir(stir) : '');
+        } catch (err) {
+            console.warn(LOG_PREFIX, 'Summons failed:', err);
+            toastr.error(err?.message || String(err), 'Reliquary — summons failed', { timeOut: 8000 });
+        }
+
+        saveChatState();
+        renderPanel();
+        return;
     }
 
     // ── COMMENTARY ENGINE ──
@@ -1668,5 +1828,5 @@ window.Reliquary = {
             console.log(LOG_PREFIX, 'Entity chose silence');
         }
     },
-    version: '0.4.0', // 3A classifier + 3B agitation + Phase 7 bleed
+    version: '0.5.0', // classifier + agitation + bleed + summons
 };
